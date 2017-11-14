@@ -9,6 +9,14 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import robafis.interfx.view.InterfxOverviewController;
+import lejos.hardware.BrickFinder;
+import lejos.hardware.Button;
+import lejos.hardware.Sound;
+import lejos.hardware.lcd.Font;
+import lejos.hardware.lcd.GraphicsLCD;
+import lejos.remote.ev3.RemoteEV3;
+import lejos.robotics.RegulatedMotor;
+import lejos.utility.Delay;
 
 public class MainApp extends Application {
 
@@ -42,6 +50,10 @@ public class MainApp extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public void initRobot() {
+    	
     }
 
     /**

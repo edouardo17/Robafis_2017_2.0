@@ -1,5 +1,7 @@
 package robafis.interfx.view;
 
+import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -11,7 +13,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import lejos.hardware.BrickFinder;
+import lejos.remote.ev3.RemoteEV3;
 import robafis.interfx.MainApp;
+import robafis.interfx.MotorControl;
 
 public class InterfxOverviewController {
 	
@@ -39,11 +44,16 @@ public class InterfxOverviewController {
     		"        linear-gradient(#8a8a8a 0%, #6b6a6b 20%, #343534 80%, #262626 100%),\n" + 
     		"        linear-gradient(#777777 0%, #606060 50%, #505250 51%, #2a2b2a 100%); ";
 	
+	public static RemoteEV3 ev3;
+
+	
 	public InterfxOverviewController() {
 	}
 	
 	@FXML
-	private void initialize() {
+	private void initialize() throws IOException, InterruptedException {
+		
+		ev3 = (RemoteEV3) BrickFinder.getDefault();
 		
 		HashMap<Button, KeyCode> extButton = new HashMap<>();
 		extButton.put(boutonAvance, KeyCode.NUMPAD8);
@@ -73,7 +83,15 @@ public class InterfxOverviewController {
 				@Override
 				public void handle(KeyEvent event) {
 					if (event.getCode() == extButton.get(mapKey)) {
-						//DO SOMETHING
+						try {
+							MotorControl.MotorController();
+						} catch (RemoteException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				}
 			});
@@ -82,7 +100,7 @@ public class InterfxOverviewController {
 				@Override
 				public void handle(KeyEvent event) {
 					if (event.getCode() == extButton.get(mapKey)) {
-						//DO SOMETHING
+						System.out.println("Coucou");
 					}
 				}
 			});
