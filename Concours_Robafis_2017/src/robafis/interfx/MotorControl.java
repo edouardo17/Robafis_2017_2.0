@@ -2,6 +2,8 @@ package robafis.interfx;
 
 import java.rmi.RemoteException;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import lejos.hardware.Audio;
 import lejos.hardware.BrickFinder;
 import lejos.hardware.Power;
@@ -16,25 +18,25 @@ import sun.tools.jar.Main;
 
 public class MotorControl {
 	
-	public static void MotorController() throws RemoteException, InterruptedException{
-		
-		RMIRegulatedMotor leftMotor = InterfxOverviewController.ev3.createRegulatedMotor("B", 'L');
-        RMIRegulatedMotor rightMotor = InterfxOverviewController.ev3.createRegulatedMotor("C", 'L');
+	static RMIRegulatedMotor leftMotor = InterfxOverviewController.ev3.createRegulatedMotor("B", 'L');
+    static RMIRegulatedMotor rightMotor = InterfxOverviewController.ev3.createRegulatedMotor("C", 'L');
+    static RMIRegulatedMotor steeringMotor = InterfxOverviewController.ev3.createRegulatedMotor("D", 'M');
+    
+    public static int steeringAngle = 0;
+	
+	public static void MotorControllerInit() throws RemoteException, InterruptedException{
         
-        int accel = 70; //Vitesse du moteur en %
-        rightMotor.setSpeed(accel);
-        leftMotor.setSpeed(accel);
-        rightMotor.backward();
-        leftMotor.backward();
+//        int accel = 80; //Vitesse du moteur en %
+//        rightMotor.setSpeed(accel);
+//        leftMotor.setSpeed(accel);
+
         
-        while(accel!=1000) {
-        	
-        	rightMotor.setSpeed(accel);
-        	leftMotor.setSpeed(accel);
-//        	Thread.sleep(10);
-        	accel += 10;
-        	
-        }
+//        while(accel<1000) {
+//        	
+//        	rightMotor.setSpeed(accel);
+//        	leftMotor.setSpeed(accel);
+//        	accel +=20;
+//        }
         
 //        rightMotor.backward();
 //        Thread.sleep(300);
@@ -48,8 +50,61 @@ public class MotorControl {
         
 //        Thread.sleep(5000);
 
-        rightMotor.stop(true);;
-        leftMotor.close();
-        rightMotor.close();
+//        rightMotor.stop(true);;
+
 	}
+	
+	public static void TurnLeft() {
+		steeringAngle -= 10;
+		if (true) {
+			try {
+				steeringMotor.rotate(-10);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static void TurnRight() {
+		steeringAngle += 10;
+		if (true) {
+			try {
+				steeringMotor.rotate(10);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static void MotorStartForward() throws RemoteException {
+		rightMotor.setSpeed(1000);
+		leftMotor.setSpeed(1000);
+		rightMotor.forward();
+		leftMotor.forward();
+	}
+	
+	public static void MotorStartBackward() throws RemoteException {
+		rightMotor.setSpeed(1000);
+		leftMotor.setSpeed(1000);
+		rightMotor.backward();
+		leftMotor.backward();
+	}
+	
+	public static void MotorStop() throws RemoteException{
+		rightMotor.stop(true);
+		leftMotor.stop(true);
+	}
+	
+	public static void ClosePorts() throws RemoteException {
+		rightMotor.stop(true);
+		leftMotor.stop(true);
+		steeringMotor.stop(true);
+		leftMotor.close();
+		rightMotor.close();
+		steeringMotor.close();
+	}
+	
+	
 }

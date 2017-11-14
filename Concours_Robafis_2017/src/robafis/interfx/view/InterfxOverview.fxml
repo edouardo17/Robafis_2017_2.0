@@ -19,6 +19,10 @@
                   <Button fx:id="boutonGauche" layoutX="313.0" layoutY="563.0" mnemonicParsing="false" prefHeight="91.0" prefWidth="99.0" text="GAUCHE" />
                   <Button fx:id="boutonDroite" layoutX="544.0" layoutY="563.0" mnemonicParsing="false" prefHeight="91.0" prefWidth="99.0" text="DROITE" />
                   <ImageView fx:id="batteryView" fitHeight="56.0" fitWidth="130.0" layoutX="553.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true" />
+                  <Button fx:id="closePortsButton" layoutX="544.0" layoutY="668.0" mnemonicParsing="false" onAction="#closeMotorPorts" text="Close Motor Ports" />
+                  <TextField fx:id="informationBox" editable="false" layoutX="4.0" layoutY="668.0" prefHeight="25.0" prefWidth="524.0" />
+                  <Label fx:id="batteryInfo" layoutX="613.0" layoutY="63.0" prefHeight="15.0" prefWidth="66.0" text="Label" />
+                  <Button fx:id="setEvents" layoutX="5.0" layoutY="625.0" mnemonicParsing="false" onAction="#setAllEvents" prefHeight="40.0" prefWidth="118.0" text="Set all events" />
                </children>
             </AnchorPane>
         </items>

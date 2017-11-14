@@ -1,13 +1,16 @@
 package robafis.interfx;
 
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import robafis.interfx.view.InterfxOverviewController;
 import lejos.hardware.BrickFinder;
 import lejos.hardware.Button;
@@ -47,6 +50,20 @@ public class MainApp extends Application {
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);
             primaryStage.show();
+
+            primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            	public void handle(WindowEvent we) {
+            		System.out.println("Stage is closing");
+            		try {
+						MotorControl.ClosePorts();
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            	}
+            }); 
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
