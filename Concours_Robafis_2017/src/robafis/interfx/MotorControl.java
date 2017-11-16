@@ -55,10 +55,10 @@ public class MotorControl {
 	}
 	
 	public static void TurnLeft() {
-		steeringAngle -= 10;
-		if (true) {
+		if (steeringAngle >= -40) {
+			steeringAngle -= 5;
 			try {
-				steeringMotor.rotate(-10);
+				steeringMotor.rotate(-5);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -67,10 +67,10 @@ public class MotorControl {
 	}
 	
 	public static void TurnRight() {
-		steeringAngle += 10;
-		if (true) {
+		if (steeringAngle <= 40) {
+			steeringAngle += 5;
 			try {
-				steeringMotor.rotate(10);
+				steeringMotor.rotate(5);
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -78,16 +78,21 @@ public class MotorControl {
 		}
 	}
 	
+	public static void returnToZero() throws RemoteException {
+		steeringMotor.rotate(-steeringAngle);
+		steeringAngle=0;
+	}
+	
 	public static void MotorStartForward() throws RemoteException {
-		rightMotor.setSpeed(1000);
-		leftMotor.setSpeed(1000);
+		rightMotor.setSpeed(InterfxOverviewController.motorSpeed);
+		leftMotor.setSpeed(InterfxOverviewController.motorSpeed);
 		rightMotor.forward();
 		leftMotor.forward();
 	}
 	
 	public static void MotorStartBackward() throws RemoteException {
-		rightMotor.setSpeed(1000);
-		leftMotor.setSpeed(1000);
+		rightMotor.setSpeed(InterfxOverviewController.motorSpeed);
+		leftMotor.setSpeed(InterfxOverviewController.motorSpeed);
 		rightMotor.backward();
 		leftMotor.backward();
 	}

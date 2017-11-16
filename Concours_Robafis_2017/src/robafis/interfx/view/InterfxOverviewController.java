@@ -52,6 +52,9 @@ public class InterfxOverviewController {
 	private Label batteryInfo;
 	
 	@FXML
+	private TextField motorSpeedInput;
+	
+	@FXML
 	private ImageView batteryView = new ImageView();
 	
 	private String buttonPressedStyle = "-fx-background-color:" +
@@ -62,6 +65,7 @@ public class InterfxOverviewController {
     		"        linear-gradient(#777777 0%, #606060 50%, #505250 51%, #2a2b2a 100%); ";
 	
 	public static RemoteEV3 ev3;
+	public static int motorSpeed;
 	
 	private MainApp mainApp;
 
@@ -148,11 +152,23 @@ public class InterfxOverviewController {
 	@FXML
 	private void setAllEvents() {
 		Scene scene = mainApp.getPrimaryStage().getScene();
+		
+		motorSpeed = Integer.parseInt(motorSpeedInput.getText());
+		
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
 				if (event.getCode() == KeyCode.NUMPAD4) {
 					MotorControl.TurnLeft();
+				}
+				
+				if (event.getCode() == KeyCode.NUMPAD7) {
+					try {
+						MotorControl.returnToZero();
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				
 				if (event.getCode() == KeyCode.NUMPAD6) {
@@ -203,22 +219,6 @@ public class InterfxOverviewController {
 			}
 		});
 	}
-	
-//	public void startMotorControllerTask() {
-//		Runnable task = new Runnable() {
-//			public void run() {
-//				try {
-//					MotorControl.MotorControllerInit();
-//				} catch (RemoteException | InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//		};
-//		Thread backgroundThread = new Thread(task);
-//		backgroundThread.setDaemon(true);
-//		backgroundThread.start();
-//	}
 	
 		public void startMotorControllerTask() {
 		Runnable task = new Runnable() {
