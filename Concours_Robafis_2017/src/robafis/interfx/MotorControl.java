@@ -110,6 +110,4 @@ public class MotorControl {
 		rightMotor.close();
 		steeringMotor.close();
 	}
-	
-	
 }

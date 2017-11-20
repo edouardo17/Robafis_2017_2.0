@@ -25,6 +25,14 @@
                   <Button fx:id="setEvents" layoutX="5.0" layoutY="625.0" mnemonicParsing="false" onAction="#setAllEvents" prefHeight="40.0" prefWidth="118.0" text="Set all events" />
                   <Label layoutX="196.0" layoutY="358.0" prefHeight="15.0" prefWidth="118.0" text="Vitesse Moteurs" />
                   <TextField fx:id="motorSpeedInput" layoutX="309.0" layoutY="353.0" />
+                  <Label layoutX="196.0" layoutY="396.0" prefHeight="15.0" prefWidth="118.0" text="Vitesse steering" />
+                  <Label layoutX="172.0" layoutY="322.0" prefHeight="15.0" prefWidth="142.0" text="Max Steering angle" />
+                  <TextField fx:id="steeringMotorSpeedInput" layoutX="309.0" layoutY="391.0" />
+                  <TextField fx:id="maximumSteeringAngleInput" layoutX="309.0" layoutY="317.0" />
+                  <TextField fx:id="motorAccelerationInput" layoutX="309.0" layoutY="281.0" />
+                  <Label layoutX="215.0" layoutY="285.0" prefHeight="15.0" prefWidth="99.0" text="Acceleration" />
+                  <Label layoutX="208.0" layoutY="251.0" prefHeight="15.0" prefWidth="106.0" text="Stoping Accel." />
+                  <TextField fx:id="stopingAccelerationInput" layoutX="309.0" layoutY="247.0" />
                </children>
             </AnchorPane>
         </items>

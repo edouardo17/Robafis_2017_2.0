@@ -23,7 +23,7 @@ import lejos.hardware.Battery;
 import lejos.hardware.BrickFinder;
 import lejos.remote.ev3.RemoteEV3;
 import robafis.interfx.MainApp;
-import robafis.interfx.MotorControl;
+import robafis.interfx.MotorControl_v2;
 
 public class InterfxOverviewController {
 	
@@ -53,6 +53,14 @@ public class InterfxOverviewController {
 	
 	@FXML
 	private TextField motorSpeedInput;
+	@FXML
+	private TextField steeringMotorSpeedInput;
+	@FXML
+	private TextField motorAccelerationInput;
+	@FXML
+	private TextField maximumSteeringAngleInput;
+	@FXML
+	private TextField stopingAccelerationInput;
 	
 	@FXML
 	private ImageView batteryView = new ImageView();
@@ -66,6 +74,10 @@ public class InterfxOverviewController {
 	
 	public static RemoteEV3 ev3;
 	public static int motorSpeed;
+	public static int steeringMotorSpeed;
+	public static int motorAcceleration;
+	public static int maximumSteeringAngle;
+	public static int stopingAcceleration;
 	
 	private MainApp mainApp;
 
@@ -114,7 +126,7 @@ public class InterfxOverviewController {
 					if ((event.getCode() == extButton.get(mapKey)) && !started) {
 						started = true;
 						try {
-							MotorControl.MotorStartForward();
+							MotorControl_v2.MotorStartForward();
 						} catch (RemoteException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -129,7 +141,7 @@ public class InterfxOverviewController {
 					if (event.getCode() == extButton.get(mapKey)) {
 						started = false;
 						try {
-							MotorControl.MotorStop();
+							MotorControl_v2.MotorStop();
 						} catch (RemoteException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -140,44 +152,81 @@ public class InterfxOverviewController {
 		}
 		
 		showBatteryLevel();
-		MotorControl.MotorControllerInit();
+		MotorControl_v2.MotorControllerInit();
 	}
 	
 	@FXML
 	private void closeMotorPorts () throws RemoteException{
-		MotorControl.ClosePorts();
+		MotorControl_v2.ClosePorts();
 		informationBox.setText("Motor ports have successfully been closed");
 	}
 	
+	Boolean startedSteering = false;
+	Boolean gotHereFirst = true;
+	
 	@FXML
-	private void setAllEvents() {
+	private void setAllEvents() throws RemoteException, InterruptedException {
 		Scene scene = mainApp.getPrimaryStage().getScene();
 		
-		motorSpeed = Integer.parseInt(motorSpeedInput.getText());
+//		if (!gotHereFirst) MotorControl_v2.ClosePorts();
+//		gotHereFirst = false;
+		if(motorSpeedInput.getText().contentEquals("")) {
+			motorSpeed = 720;
+		} else motorSpeed = Integer.parseInt(motorSpeedInput.getText());
+		
+		if(steeringMotorSpeedInput.getText().contentEquals("")) {
+			steeringMotorSpeed = 150;
+		} else steeringMotorSpeed = Integer.parseInt(steeringMotorSpeedInput.getText());
+		
+		if(motorAccelerationInput.getText().contentEquals("")) {
+			motorAcceleration = 0;
+		} else motorAcceleration = Integer.parseInt(motorAccelerationInput.getText());
+		
+		if(maximumSteeringAngleInput.getText().contentEquals("")) {
+			maximumSteeringAngle = 40;
+		} else maximumSteeringAngle = Integer.parseInt(maximumSteeringAngleInput.getText());
+		
+		if(stopingAccelerationInput.getText().contentEquals("")) {
+			stopingAcceleration = 0;
+		} else stopingAcceleration = Integer.parseInt(stopingAccelerationInput.getText());
+		
+		MotorControl_v2.MotorControllerInit();
 		
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
-				if (event.getCode() == KeyCode.NUMPAD4) {
-					MotorControl.TurnLeft();
-				}
-				
-				if (event.getCode() == KeyCode.NUMPAD7) {
+				if (event.getCode() == KeyCode.NUMPAD4 && !startedSteering) {
+					startedSteering = true;
 					try {
-						MotorControl.returnToZero();
+						MotorControl_v2.TurnLeft();
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 				
-				if (event.getCode() == KeyCode.NUMPAD6) {
-					MotorControl.TurnRight();
+//				if (event.getCode() == KeyCode.NUMPAD7) {
+//					try {
+//						MotorControl_v2.returnToZero();
+//					} catch (RemoteException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//				}
+				
+				if (event.getCode() == KeyCode.NUMPAD6 && !startedSteering) {
+					startedSteering = true;
+					try {
+						MotorControl_v2.TurnRight();
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
 					started = true;
 					try {
-						MotorControl.MotorStartForward();
+						MotorControl_v2.MotorStartForward();
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -186,7 +235,7 @@ public class InterfxOverviewController {
 				if (event.getCode() == KeyCode.NUMPAD8 && !started) {
 					started = true;
 					try {
-						MotorControl.MotorStartBackward();
+						MotorControl_v2.MotorStartBackward();
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -201,16 +250,27 @@ public class InterfxOverviewController {
 				if (event.getCode() == KeyCode.NUMPAD8) {
 					started = false;
 					try {
-						MotorControl.MotorStop();
+						MotorControl_v2.MotorStop();
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
+				
 				if (event.getCode() == KeyCode.NUMPAD5) {
 					started = false;
 					try {
-						MotorControl.MotorStop();
+						MotorControl_v2.MotorStop();
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				
+				if ((event.getCode() == KeyCode.NUMPAD4 && startedSteering) || (event.getCode() == KeyCode.NUMPAD6 && startedSteering)) {
+					startedSteering = false;
+					try {
+						MotorControl_v2.returnToZero();
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -224,7 +284,7 @@ public class InterfxOverviewController {
 		Runnable task = new Runnable() {
 			public void run() {
 				try {
-					MotorControl.MotorControllerInit();
+					MotorControl_v2.MotorControllerInit();
 				} catch (RemoteException | InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

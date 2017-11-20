@@ -35,6 +35,11 @@ public class MainApp extends Application {
 
         showInterfxOverview();
     }
+    
+    @Override
+    public void stop() throws RemoteException {
+    	MotorControl_v2.ClosePorts();
+    }
 
     /**
      * Initialise le RootLayout
@@ -55,7 +60,7 @@ public class MainApp extends Application {
             	public void handle(WindowEvent we) {
             		System.out.println("Stage is closing");
             		try {
-						MotorControl.ClosePorts();
+						MotorControl_v2.ClosePorts();
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
