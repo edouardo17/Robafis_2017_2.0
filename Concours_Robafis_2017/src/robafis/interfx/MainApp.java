@@ -53,6 +53,8 @@ public class MainApp extends Application {
 
             // Affiche la scene qui contient le RootLayout
             Scene scene = new Scene(rootLayout);
+            primaryStage.setWidth(1000);
+            primaryStage.setHeight(760);
             primaryStage.setScene(scene);
             primaryStage.show();
 

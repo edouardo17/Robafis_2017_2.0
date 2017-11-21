@@ -27,50 +27,29 @@ import robafis.interfx.MotorControl_v2;
 
 public class InterfxOverviewController {
 	
-	@FXML
-	private Button setEvents;
+	@FXML private Button setEvents;
+	@FXML private Button boutonAvance;
+	@FXML private Button boutonRecule;
+	@FXML private Button boutonGauche;
+	@FXML private Button boutonDroite;
 	
-	@FXML
-	private Button boutonAvance;
+	@FXML private Label batteryInfo;
 	
-	@FXML
-	private Button boutonRecule;
+	@FXML private TextField motorSpeedInput;
+	@FXML private TextField steeringMotorSpeedInput;
+	@FXML private TextField motorAccelerationInput;
+	@FXML private TextField maximumSteeringAngleInput;
+	@FXML private TextField stopingAccelerationInput;
 	
-	@FXML
-	private Button boutonGauche;
+	@FXML private ImageView batteryView = new ImageView();
 	
-	@FXML
-	private Button boutonDroite;
-	
-	@FXML
-	private Button closePortsButton;
-	
-	@FXML
-	private TextField informationBox;
-	
-	@FXML
-	private Label batteryInfo;
-	
-	@FXML
-	private TextField motorSpeedInput;
-	@FXML
-	private TextField steeringMotorSpeedInput;
-	@FXML
-	private TextField motorAccelerationInput;
-	@FXML
-	private TextField maximumSteeringAngleInput;
-	@FXML
-	private TextField stopingAccelerationInput;
-	
-	@FXML
-	private ImageView batteryView = new ImageView();
-	
-	private String buttonPressedStyle = "-fx-background-color:" +
-    		"	 	 linear-gradient(#686868 0%, #232723 25%, #373837 75%, #757575 100%),\n" + 
-    		"        linear-gradient(#020b02, #3a3a3a),\n" + 
-    		"        linear-gradient(#9d9e9d 0%, #6b6a6b 20%, #343534 80%, #242424 100%),\n" + 
-    		"        linear-gradient(#8a8a8a 0%, #6b6a6b 20%, #343534 80%, #262626 100%),\n" + 
-    		"        linear-gradient(#777777 0%, #606060 50%, #505250 51%, #2a2b2a 100%); ";
+	private String buttonPressedStyle = "-fx-background-color: \n" + 
+			"        #3c7fb1,\n" + 
+			"        linear-gradient(#61adc6, #56c4ff),\n" + 
+			"        linear-gradient(#6dc9ff 0%, #6caed1 49%, #20acfc 50%, #6eb2d8 100%);\n" + 
+			"    -fx-background-insets: 0,1,2;\n" + 
+			"    -fx-background-radius: 3,2,1;\n" + 
+			"    -fx-font-size: 14px;";
 	
 	public static RemoteEV3 ev3;
 	public static int motorSpeed;
@@ -97,79 +76,16 @@ public class InterfxOverviewController {
                 .build();
 		
 		ev3 = (RemoteEV3) BrickFinder.getDefault();
-		
-		HashMap<Button, KeyCode> extButton = new HashMap<>();
-		extButton.put(boutonAvance, KeyCode.NUMPAD8);
-		extButton.put(boutonRecule, KeyCode.NUMPAD5);
-		extButton.put(boutonDroite, KeyCode.NUMPAD6);
-		extButton.put(boutonGauche, KeyCode.NUMPAD4);
-		
-		for(Button mapKey : extButton.keySet()) {
-			
-			mapKey.addEventHandler(MouseEvent.MOUSE_PRESSED, 
-					new EventHandler<MouseEvent>() {
-						@Override public void handle(MouseEvent e) {
-							mapKey.setStyle(buttonPressedStyle);
-					}
-				});
-			
-			mapKey.addEventHandler(MouseEvent.MOUSE_RELEASED, 
-				    new EventHandler<MouseEvent>() {
-				        @Override public void handle(MouseEvent e) {
-				            mapKey.setStyle("");
-				        }
-				});
-			
-			mapKey.setOnKeyPressed(new EventHandler<KeyEvent>() {
-				@Override
-				public void handle(KeyEvent event) {
-					if ((event.getCode() == extButton.get(mapKey)) && !started) {
-						started = true;
-						try {
-							MotorControl_v2.MotorStartForward();
-						} catch (RemoteException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				}
-			});
-			
-			mapKey.setOnKeyReleased(new EventHandler<KeyEvent>() {
-				@Override
-				public void handle(KeyEvent event) {
-					if (event.getCode() == extButton.get(mapKey)) {
-						started = false;
-						try {
-							MotorControl_v2.MotorStop();
-						} catch (RemoteException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				}
-			});			
-		}
-		
 		showBatteryLevel();
 		MotorControl_v2.MotorControllerInit();
 	}
 	
-	@FXML
-	private void closeMotorPorts () throws RemoteException{
-		MotorControl_v2.ClosePorts();
-		informationBox.setText("Motor ports have successfully been closed");
-	}
-	
 	Boolean startedSteering = false;
-	Boolean gotHereFirst = true;
 	
 	@FXML
 	private void setAllEvents() throws RemoteException, InterruptedException {
 		Scene scene = mainApp.getPrimaryStage().getScene();
 		
-//		if (!gotHereFirst) MotorControl_v2.ClosePorts();
-//		gotHereFirst = false;
 		if(motorSpeedInput.getText().contentEquals("")) {
 			motorSpeed = 720;
 		} else motorSpeed = Integer.parseInt(motorSpeedInput.getText());
@@ -198,46 +114,37 @@ public class InterfxOverviewController {
 				if (event.getCode() == KeyCode.NUMPAD4 && !startedSteering) {
 					startedSteering = true;
 					try {
+						boutonGauche.setStyle(buttonPressedStyle);
 						MotorControl_v2.TurnLeft();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 				
-//				if (event.getCode() == KeyCode.NUMPAD7) {
-//					try {
-//						MotorControl_v2.returnToZero();
-//					} catch (RemoteException e) {
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-//				}
-				
 				if (event.getCode() == KeyCode.NUMPAD6 && !startedSteering) {
 					startedSteering = true;
 					try {
+						boutonDroite.setStyle(buttonPressedStyle);
 						MotorControl_v2.TurnRight();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
 					started = true;
 					try {
+						boutonRecule.setStyle(buttonPressedStyle);
 						MotorControl_v2.MotorStartForward();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 				if (event.getCode() == KeyCode.NUMPAD8 && !started) {
 					started = true;
 					try {
+						boutonAvance.setStyle(buttonPressedStyle);
 						MotorControl_v2.MotorStartBackward();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -250,9 +157,9 @@ public class InterfxOverviewController {
 				if (event.getCode() == KeyCode.NUMPAD8) {
 					started = false;
 					try {
+						boutonAvance.setStyle("");
 						MotorControl_v2.MotorStop();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -260,9 +167,9 @@ public class InterfxOverviewController {
 				if (event.getCode() == KeyCode.NUMPAD5) {
 					started = false;
 					try {
+						boutonRecule.setStyle("");
 						MotorControl_v2.MotorStop();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -270,9 +177,10 @@ public class InterfxOverviewController {
 				if ((event.getCode() == KeyCode.NUMPAD4 && startedSteering) || (event.getCode() == KeyCode.NUMPAD6 && startedSteering)) {
 					startedSteering = false;
 					try {
+						boutonGauche.setStyle("");
+						boutonDroite.setStyle("");
 						MotorControl_v2.returnToZero();
 					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -286,7 +194,6 @@ public class InterfxOverviewController {
 				try {
 					MotorControl_v2.MotorControllerInit();
 				} catch (RemoteException | InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
