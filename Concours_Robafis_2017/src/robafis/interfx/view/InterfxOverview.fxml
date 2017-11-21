@@ -47,10 +47,9 @@
         			</ImageView>
       			</graphic>
             </Button>
-            <ImageView fx:id="batteryView" fitHeight="56.0" fitWidth="130.0" layoutX="553.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true" />
             
-            <Label fx:id="batteryInfo" layoutX="603.0" layoutY="63.0" prefHeight="15.0" prefWidth="76.0" text="Batt. Level" />
-            <Button fx:id="setEvents" layoutX="5.0" layoutY="625.0" mnemonicParsing="false" onAction="#setAllEvents" prefHeight="40.0" prefWidth="118.0" text="Set all events" />
+            <Label fx:id="batteryInfo" layoutX="913.0" layoutY="63.0" prefHeight="15.0" prefWidth="76.0" text="Batt. Level" />
+            <Button fx:id="connectToEV3" layoutX="11.0" layoutY="14.0" mnemonicParsing="false" onAction="#connectToEV3" prefHeight="44.0" prefWidth="130.0" text="Connect to EV3" />
             <Label layoutX="196.0" layoutY="358.0" prefHeight="15.0" prefWidth="118.0" text="Vitesse Moteurs" />
             <TextField fx:id="motorSpeedInput" layoutX="309.0" layoutY="353.0" prefWidth="60.0" />
             <Label layoutX="196.0" layoutY="396.0" prefHeight="15.0" prefWidth="118.0" text="Vitesse steering" />
@@ -61,6 +60,38 @@
             <Label layoutX="215.0" layoutY="285.0" prefHeight="15.0" prefWidth="99.0" text="Acceleration" />
             <Label layoutX="208.0" layoutY="251.0" prefHeight="15.0" prefWidth="106.0" text="Stoping Accel." />
             <TextField fx:id="stopingAccelerationInput" layoutX="309.0" layoutY="247.0" prefWidth="60.0" />
+            <GridPane fx:id="testPane" layoutX="875.0" layoutY="-87.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints maxHeight="243.0" minHeight="10.0" prefHeight="196.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+            </GridPane>
+            <Label fx:id="infoBox" layoutX="509.0" layoutY="662.0" prefHeight="20.0" prefWidth="465.0" text="Label" textAlignment="RIGHT">
+               <font>
+                  <Font size="17.0" />
+               </font>
+            </Label>
+            <GridPane layoutX="161.0" layoutY="11.0" prefHeight="50.0" prefWidth="225.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="94.0" minWidth="10.0" prefWidth="75.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="125.0" minWidth="10.0" prefWidth="75.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="75.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints maxHeight="26.0" minHeight="10.0" prefHeight="22.0" vgrow="SOMETIMES" />
+                <RowConstraints maxHeight="40.0" minHeight="10.0" prefHeight="38.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Label text="Motor 1" textAlignment="CENTER" GridPane.halignment="CENTER" />
+                  <Label text="Motor 2" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
+                  <Label text="Steering" GridPane.columnIndex="2" GridPane.halignment="CENTER" />
+                  <ImageView fx:id="motor1Status" fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                  <ImageView fx:id="motor2Status" fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                  <ImageView fx:id="steeringStatus" fitHeight="30.0" fitWidth="30.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+               </children>
+            </GridPane>
          </children>
       </AnchorPane>
    </children>

@@ -73,6 +73,16 @@ public class MotorControl_v2 {
 		steeringMotor.stop(true);
 	}
 	
+	public static void CalibrateLeft() throws RemoteException {
+		steeringMotor.rotate(-2);
+		steeringMotor.resetTachoCount();
+	}
+	
+	public static void CalibrateRight() throws RemoteException {
+		steeringMotor.rotate(2);
+		steeringMotor.resetTachoCount();
+	}
+	
 	public static void returnToZero() throws RemoteException {
 		steeringMotor.stop(true);
 		steeringMotor.rotate(-steeringMotor.getTachoCount());

@@ -1,14 +1,14 @@
 package robafis.interfx.view;
 
-import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.HashMap;
 
 import eu.hansolo.medusa.Gauge;
 import eu.hansolo.medusa.Gauge.SkinType;
 import eu.hansolo.medusa.GaugeBuilder;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -17,8 +17,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Stop;
 import lejos.hardware.Battery;
 import lejos.hardware.BrickFinder;
 import lejos.remote.ev3.RemoteEV3;
@@ -27,13 +28,14 @@ import robafis.interfx.MotorControl_v2;
 
 public class InterfxOverviewController {
 	
-	@FXML private Button setEvents;
+	@FXML private Button connectToEV3;
 	@FXML private Button boutonAvance;
 	@FXML private Button boutonRecule;
 	@FXML private Button boutonGauche;
 	@FXML private Button boutonDroite;
 	
 	@FXML private Label batteryInfo;
+	@FXML private Label infoBox;
 	
 	@FXML private TextField motorSpeedInput;
 	@FXML private TextField steeringMotorSpeedInput;
@@ -41,7 +43,11 @@ public class InterfxOverviewController {
 	@FXML private TextField maximumSteeringAngleInput;
 	@FXML private TextField stopingAccelerationInput;
 	
-	@FXML private ImageView batteryView = new ImageView();
+	@FXML private ImageView motor1Status;
+	@FXML private ImageView motor2Status;
+	@FXML private ImageView steeringStatus;
+	
+	@FXML private GridPane testPane;
 	
 	private String buttonPressedStyle = "-fx-background-color: \n" + 
 			"        #3c7fb1,\n" + 
@@ -59,33 +65,70 @@ public class InterfxOverviewController {
 	public static int stopingAcceleration;
 	
 	private MainApp mainApp;
+	private Gauge gauge;
+	private Gauge batteryGauge;
 
 	Boolean started = false;
+	Boolean startedSteering = false;
 	
 	public InterfxOverviewController() {
 	}
 	
 	@FXML
-	private void initialize() throws IOException, InterruptedException {
+	private void initialize() {
 		
-		Gauge gauge = GaugeBuilder.create()
-                .skinType(SkinType.HORIZONTAL)
+		gauge = GaugeBuilder.create()
+                .skinType(SkinType.MODERN)
                 .prefSize(500, 250)
+                .title("rpm")
+                .maxValue(720)
                 .foregroundBaseColor(Color.rgb(249, 249, 249))
                 .knobColor(Color.BLACK)
                 .build();
 		
-		ev3 = (RemoteEV3) BrickFinder.getDefault();
-		showBatteryLevel();
-		MotorControl_v2.MotorControllerInit();
+		batteryGauge = (GaugeBuilder.create()
+                .skinType(SkinType.BATTERY)
+                .value(70))
+				.prefWidth(500)
+                .gradientBarEnabled(true) // Gradient filled bar should be visible  
+                .gradientBarStops(new Stop(1.0, Color.GREEN), // Gradient for gradient bar  
+                                     new Stop(0.75, Color.YELLOWGREEN),  
+                                     new Stop(0.5, Color.YELLOW),  
+                                     new Stop(0.25, Color.DARKORANGE),  
+                                     new Stop(0.0, Color.ORANGERED))
+                .build();
+		
+		testPane.setPadding(new Insets(20));
+		testPane.add(batteryGauge, 0, 0);
+		
+		infoBox.setAlignment(Pos.CENTER_RIGHT);
+		infoBox.setText("Interfx initialization complete");
+		
+		motor1Status.setImage(new Image("file:ressources/icons/ko.png"));
+		motor2Status.setImage(new Image("file:ressources/icons/ko.png"));
+		steeringStatus.setImage(new Image("file:ressources/icons/ko.png"));
 	}
 	
-	Boolean startedSteering = false;
-	
 	@FXML
-	private void setAllEvents() throws RemoteException, InterruptedException {
-		Scene scene = mainApp.getPrimaryStage().getScene();
+	private void connectToEV3() throws RemoteException, InterruptedException {
+		infoBox.setText("Trying to connect to EV3 10.42.0.165, please wait...");
 		
+		ev3 = (RemoteEV3) BrickFinder.getDefault();
+		
+		infoBox.setText("Successfuly connected to the brick");
+		Thread.sleep(200);
+		
+		infoBox.setText("Initialising motors");
+		MotorControl_v2.MotorControllerInit();
+		
+		setAllEvents();
+		
+		motor1Status.setImage(new Image("file:ressources/icons/ok.png"));
+		motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
+		steeringStatus.setImage(new Image("file:ressources/icons/ok.png"));
+	}
+	
+	private void getParameters() {
 		if(motorSpeedInput.getText().contentEquals("")) {
 			motorSpeed = 720;
 		} else motorSpeed = Integer.parseInt(motorSpeedInput.getText());
@@ -105,6 +148,12 @@ public class InterfxOverviewController {
 		if(stopingAccelerationInput.getText().contentEquals("")) {
 			stopingAcceleration = 0;
 		} else stopingAcceleration = Integer.parseInt(stopingAccelerationInput.getText());
+	}
+	
+	private void setAllEvents() throws RemoteException, InterruptedException {
+		Scene scene = mainApp.getPrimaryStage().getScene();
+		
+		getParameters();
 		
 		MotorControl_v2.MotorControllerInit();
 		
@@ -148,6 +197,23 @@ public class InterfxOverviewController {
 						e.printStackTrace();
 					}
 				}
+				
+				// Ceci est une connerie de Jules
+				if (event.getCode() == KeyCode.NUMPAD1) {
+					try {
+						MotorControl_v2.CalibrateLeft();
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				}
+				if (event.getCode() == KeyCode.NUMPAD3) {
+					try {
+						MotorControl_v2.CalibrateRight();
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				}
+				// Fin des conneries de Jules
 			}
 		});
 		
@@ -205,8 +271,8 @@ public class InterfxOverviewController {
 	
 	private int getBatteryLevel() {
 		float voltage = Battery.getVoltage();
-		float maximumVoltage = 9;
-		float currentVoltage = (voltage/maximumVoltage)*100;
+		float maximumVoltage = (float) 2.75;
+		float currentVoltage = (float) (((voltage-6.25)/maximumVoltage)*100);
 		
 		batteryInfo.setText(String.valueOf(Math.round(currentVoltage))+"%");
 		
@@ -216,17 +282,6 @@ public class InterfxOverviewController {
 		if (currentVoltage<=40 && currentVoltage>20) return 40;
 		if (currentVoltage<=20 && currentVoltage>0) return 20;
 		else return 0;
-	}
-	
-	private void showBatteryLevel() {
-
-		int level = getBatteryLevel();
-		if (level==100) {batteryView.setImage(new Image("file:ressources/icons/battery_100.png"));}
-		if (level==80) {batteryView.setImage(new Image("file:ressources/icons/battery_80.png"));}
-		if (level==60) {batteryView.setImage(new Image("file:ressources/icons/battery_60.png"));}
-		if (level==40) {batteryView.setImage(new Image("file:ressources/icons/battery_40.png"));}
-		if (level==20) {batteryView.setImage(new Image("file:ressources/icons/battery_20.png"));}
-		if (level==0) {batteryView.setImage(new Image("file:ressources/icons/battery_0.png"));}
 	}
 	
 	public void setMainApp(MainApp mainApp) {
