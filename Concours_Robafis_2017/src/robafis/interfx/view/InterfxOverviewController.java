@@ -2,9 +2,12 @@ package robafis.interfx.view;
 
 import java.rmi.RemoteException;
 
+import org.reactfx.util.FxTimer;
+
 import eu.hansolo.medusa.Gauge;
 import eu.hansolo.medusa.Gauge.SkinType;
 import eu.hansolo.medusa.GaugeBuilder;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -34,7 +37,6 @@ public class InterfxOverviewController {
 	@FXML private Button boutonGauche;
 	@FXML private Button boutonDroite;
 	
-	@FXML private Label batteryInfo;
 	@FXML private Label infoBox;
 	
 	@FXML private TextField motorSpeedInput;
@@ -47,7 +49,8 @@ public class InterfxOverviewController {
 	@FXML private ImageView motor2Status;
 	@FXML private ImageView steeringStatus;
 	
-	@FXML private GridPane testPane;
+	@FXML private GridPane batteryPane;
+	@FXML private GridPane anglePane;
 	
 	private String buttonPressedStyle = "-fx-background-color: \n" + 
 			"        #3c7fb1,\n" + 
@@ -65,7 +68,7 @@ public class InterfxOverviewController {
 	public static int stopingAcceleration;
 	
 	private MainApp mainApp;
-	private Gauge gauge;
+	private Gauge angleGauge;
 	private Gauge batteryGauge;
 
 	Boolean started = false;
@@ -74,16 +77,66 @@ public class InterfxOverviewController {
 	public InterfxOverviewController() {
 	}
 	
+	//Thread de MotorControl_v2
+    public void motorThread() {
+		Runnable task = new Runnable() {
+			public void run() {
+				try {
+					MotorControl_v2.MotorControllerInit();
+				} catch (RemoteException | InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		Thread backgroundThread = new Thread(task);
+		backgroundThread.setDaemon(true);
+		backgroundThread.start();
+	}
+    
+    public void batteryThread() {
+		Runnable task = new Runnable() {
+			public void run() {
+				try {
+					while(true) {showBatteryLevel(); Thread.sleep(5000);}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		};
+		Thread backgroundThread = new Thread(task);
+		backgroundThread.setDaemon(true);
+		backgroundThread.start();
+	}
+    
+    public void parametersThread() {
+    	Runnable task = new Runnable() {
+			public void run() {
+				try {
+					showParameters();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		};
+		Thread backgroundThread = new Thread(task);
+		backgroundThread.setDaemon(true);
+		backgroundThread.start();
+    }
+	
 	@FXML
 	private void initialize() {
 		
-		gauge = GaugeBuilder.create()
+		angleGauge = GaugeBuilder.create()
                 .skinType(SkinType.MODERN)
                 .prefSize(500, 250)
                 .title("rpm")
                 .maxValue(720)
                 .foregroundBaseColor(Color.rgb(249, 249, 249))
                 .knobColor(Color.BLACK)
+                .animated(true)
+                .animationDuration(500)
                 .build();
 		
 		batteryGauge = (GaugeBuilder.create()
@@ -98,8 +151,11 @@ public class InterfxOverviewController {
                                      new Stop(0.0, Color.ORANGERED))
                 .build();
 		
-		testPane.setPadding(new Insets(20));
-		testPane.add(batteryGauge, 0, 0);
+		batteryPane.setPadding(new Insets(20));
+		batteryPane.add(batteryGauge, 0, 0);
+		
+		anglePane.setPadding(new Insets(20));
+		anglePane.add(angleGauge, 0, 0);
 		
 		infoBox.setAlignment(Pos.CENTER_RIGHT);
 		infoBox.setText("Interfx initialization complete");
@@ -111,15 +167,10 @@ public class InterfxOverviewController {
 	
 	@FXML
 	private void connectToEV3() throws RemoteException, InterruptedException {
-		infoBox.setText("Trying to connect to EV3 10.42.0.165, please wait...");
 		
 		ev3 = (RemoteEV3) BrickFinder.getDefault();
 		
-		infoBox.setText("Successfuly connected to the brick");
-		Thread.sleep(200);
-		
 		infoBox.setText("Initialising motors");
-		MotorControl_v2.MotorControllerInit();
 		
 		setAllEvents();
 		
@@ -129,6 +180,7 @@ public class InterfxOverviewController {
 	}
 	
 	private void getParameters() {
+		
 		if(motorSpeedInput.getText().contentEquals("")) {
 			motorSpeed = 720;
 		} else motorSpeed = Integer.parseInt(motorSpeedInput.getText());
@@ -138,7 +190,7 @@ public class InterfxOverviewController {
 		} else steeringMotorSpeed = Integer.parseInt(steeringMotorSpeedInput.getText());
 		
 		if(motorAccelerationInput.getText().contentEquals("")) {
-			motorAcceleration = 0;
+			motorAcceleration = 500;
 		} else motorAcceleration = Integer.parseInt(motorAccelerationInput.getText());
 		
 		if(maximumSteeringAngleInput.getText().contentEquals("")) {
@@ -146,7 +198,7 @@ public class InterfxOverviewController {
 		} else maximumSteeringAngle = Integer.parseInt(maximumSteeringAngleInput.getText());
 		
 		if(stopingAccelerationInput.getText().contentEquals("")) {
-			stopingAcceleration = 0;
+			stopingAcceleration = 500;
 		} else stopingAcceleration = Integer.parseInt(stopingAccelerationInput.getText());
 	}
 	
@@ -155,29 +207,35 @@ public class InterfxOverviewController {
 		
 		getParameters();
 		
-		MotorControl_v2.MotorControllerInit();
+		motorThread();
+		batteryThread();
+		parametersThread();
 		
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
 				if (event.getCode() == KeyCode.NUMPAD4 && !startedSteering) {
+					MotorControl_v2.flag4pressed=1;
 					startedSteering = true;
-					try {
-						boutonGauche.setStyle(buttonPressedStyle);
-						MotorControl_v2.TurnLeft();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
+					boutonGauche.setStyle(buttonPressedStyle);
+//					try {
+//						boutonGauche.setStyle(buttonPressedStyle);
+//						MotorControl_v2.TurnLeft();
+//					} catch (RemoteException e) {
+//						e.printStackTrace();
+//					}
 				}
 				
 				if (event.getCode() == KeyCode.NUMPAD6 && !startedSteering) {
+					MotorControl_v2.flag6pressed=1;
 					startedSteering = true;
-					try {
-						boutonDroite.setStyle(buttonPressedStyle);
-						MotorControl_v2.TurnRight();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
+					boutonDroite.setStyle(buttonPressedStyle);
+//					try {
+//						boutonDroite.setStyle(buttonPressedStyle);
+//						MotorControl_v2.TurnRight();
+//					} catch (RemoteException e) {
+//						e.printStackTrace();
+//					}
 				}
 				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
 					started = true;
@@ -198,7 +256,6 @@ public class InterfxOverviewController {
 					}
 				}
 				
-				// Ceci est une connerie de Jules
 				if (event.getCode() == KeyCode.NUMPAD1) {
 					try {
 						MotorControl_v2.CalibrateLeft();
@@ -213,7 +270,6 @@ public class InterfxOverviewController {
 						e.printStackTrace();
 					}
 				}
-				// Fin des conneries de Jules
 			}
 		});
 		
@@ -240,48 +296,49 @@ public class InterfxOverviewController {
 					}
 				}
 				
-				if ((event.getCode() == KeyCode.NUMPAD4 && startedSteering) || (event.getCode() == KeyCode.NUMPAD6 && startedSteering)) {
+//				if ((event.getCode() == KeyCode.NUMPAD4 && startedSteering) || (event.getCode() == KeyCode.NUMPAD6 && startedSteering)) {
+//					startedSteering = false;
+//					try {
+//						boutonGauche.setStyle("");
+//						boutonDroite.setStyle("");
+//						MotorControl_v2.returnToZero();
+//					} catch (RemoteException e) {
+//						e.printStackTrace();
+//					}
+//				}
+				
+				if ((event.getCode() == KeyCode.NUMPAD6) && startedSteering) {
 					startedSteering = false;
-					try {
-						boutonGauche.setStyle("");
-						boutonDroite.setStyle("");
-						MotorControl_v2.returnToZero();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
+					boutonDroite.setStyle("");
+					MotorControl_v2.flag6pressed=0;
+				}
+				
+				if ((event.getCode() == KeyCode.NUMPAD4) && startedSteering) {
+					startedSteering = false;
+					boutonGauche.setStyle("");
+					MotorControl_v2.flag4pressed=0;
 				}
 			}
 		});
 	}
 	
-		public void startMotorControllerTask() {
-		Runnable task = new Runnable() {
-			public void run() {
-				try {
-					MotorControl_v2.MotorControllerInit();
-				} catch (RemoteException | InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		Thread backgroundThread = new Thread(task);
-		backgroundThread.setDaemon(true);
-		backgroundThread.start();
+	private void showBatteryLevel() throws InterruptedException {
+			batteryGauge.setValue(getBatteryLevel());
 	}
 	
-	private int getBatteryLevel() {
+	private void showParameters() throws InterruptedException {
+		while(true) {
+			angleGauge.setValue(MotorControl_v2.angle);
+			Thread.sleep(300);
+		}
+	}
+	
+	private float getBatteryLevel() {
 		float voltage = Battery.getVoltage();
 		float maximumVoltage = (float) 2.75;
 		float currentVoltage = (float) (((voltage-6.25)/maximumVoltage)*100);
 		
-		batteryInfo.setText(String.valueOf(Math.round(currentVoltage))+"%");
-		
-		if (currentVoltage>80) return 100;
-		if (currentVoltage<=80 && currentVoltage>60) return 80;
-		if (currentVoltage<=60 && currentVoltage>40) return 60;
-		if (currentVoltage<=40 && currentVoltage>20) return 40;
-		if (currentVoltage<=20 && currentVoltage>0) return 20;
-		else return 0;
+		return currentVoltage;
 	}
 	
 	public void setMainApp(MainApp mainApp) {

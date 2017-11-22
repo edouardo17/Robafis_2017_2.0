@@ -29,14 +29,22 @@ public class MotorControl_v2 {
 	static RMIRegulatedMotor leftMotor = InterfxOverviewController.ev3.createRegulatedMotor("B",  'L');
     static RMIRegulatedMotor rightMotor = InterfxOverviewController.ev3.createRegulatedMotor("C", 'L');
     static RMIRegulatedMotor steeringMotor = InterfxOverviewController.ev3.createRegulatedMotor("D", 'M');
+    public static int flag4pressed = 0;
+    public static int flag6pressed = 0;
+    public static volatile float angle = 0;
     
-//    static EV3TouchSensor touchSensor = new EV3TouchSensor(SensorPort.S1);
-//    static SensorMode touch = touchSensor.getTouchMode();
-    
-    public void monitorAngle() {
+    public static void monitorAngle() {
 		Runnable task = new Runnable() {
 			public void run() {
-				//
+				while(true) {
+					try {
+						angle = steeringMotor.getTachoCount();
+						Thread.sleep(300);
+					} catch (RemoteException | InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		    	}
 			}
 		};
 		Thread backgroundThread = new Thread(task);
@@ -49,14 +57,40 @@ public class MotorControl_v2 {
 		steeringMotor.resetTachoCount();
         leftMotor.resetTachoCount();
         rightMotor.resetTachoCount();
+        
+        monitorAngle();
 		
         steeringMotor.setSpeed(InterfxOverviewController.steeringMotorSpeed);
-
-        if (InterfxOverviewController.motorAcceleration != 0) {
-        	
-        }
-
-		System.out.println("Reset completed successfuly");
+		
+		while(true) {
+			
+			if (flag4pressed==1) {
+				steeringMotor.forward();
+				flag4pressed = 2;
+			}
+			if (flag4pressed==0) {
+				steeringMotor.stop(true);
+				flag4pressed = 2;
+			}
+			if (flag6pressed==1) {
+				steeringMotor.backward();
+				flag6pressed = 2;
+			}
+			if (flag6pressed==0) {
+				steeringMotor.stop(true);
+				flag6pressed = 2;
+			}
+			
+//			if (flag4pressed==2) {
+//				returnToZero();
+//			}
+//			
+//			if (flag6pressed==2) {
+//				returnToZero();
+//			}
+			
+			Thread.sleep(1);
+		}
 	}
 	
 	public static void TurnLeft() throws RemoteException {
@@ -84,9 +118,9 @@ public class MotorControl_v2 {
 	}
 	
 	public static void returnToZero() throws RemoteException {
-		steeringMotor.stop(true);
+//		steeringMotor.stop(true);
 		steeringMotor.rotate(-steeringMotor.getTachoCount());
-		SteeringStop();
+//		steeringMotor.stop(true);
 	}
 	
 	public static void MotorStartForward() throws RemoteException {
@@ -105,10 +139,6 @@ public class MotorControl_v2 {
 		leftMotor.setSpeed(InterfxOverviewController.motorSpeed);
 		rightMotor.backward();
 		leftMotor.backward();
-	}
-	
-	public static void SteeringStop() throws RemoteException {
-		steeringMotor.stop(true);
 	}
 	
 	public static void MotorStop() throws RemoteException{

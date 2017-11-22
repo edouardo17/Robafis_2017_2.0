@@ -5,5 +5,6 @@
 	<classpathentry exported="true" kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER"/>
 	<classpathentry kind="con" path="org.lejos.ev3.ldt.LEJOS_EV3_LIBRARY_CONTAINER/"/>
 	<classpathentry kind="lib" path="/home/fourmaed/Downloads/Medusa-7.9.jar"/>
+	<classpathentry kind="lib" path="/home/fourmaed/Downloads/reactfx-2.0-M5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
