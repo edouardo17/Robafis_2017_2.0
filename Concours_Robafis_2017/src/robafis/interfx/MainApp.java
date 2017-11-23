@@ -38,7 +38,8 @@ public class MainApp extends Application {
     
     @Override
     public void stop() throws RemoteException {
-    	MotorControl_v2.ClosePorts();
+//    	MotorControl_v2.ClosePorts();
+    	InterfxOverviewController.running=false;
     }
 
     /**

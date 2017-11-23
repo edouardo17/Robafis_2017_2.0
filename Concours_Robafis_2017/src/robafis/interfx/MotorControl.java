@@ -18,9 +18,9 @@ import sun.tools.jar.Main;
 
 public class MotorControl {
 	
-	static RMIRegulatedMotor leftMotor = InterfxOverviewController.ev3.createRegulatedMotor("B", 'L');
-    static RMIRegulatedMotor rightMotor = InterfxOverviewController.ev3.createRegulatedMotor("C", 'L');
-    static RMIRegulatedMotor steeringMotor = InterfxOverviewController.ev3.createRegulatedMotor("D", 'M');
+	static RMIRegulatedMotor leftMotor = commMotor.ev3.createRegulatedMotor("B", 'L');
+    static RMIRegulatedMotor rightMotor = commMotor.ev3.createRegulatedMotor("C", 'L');
+    static RMIRegulatedMotor steeringMotor = commMotor.ev3.createRegulatedMotor("D", 'M');
     
     public static int steeringAngle = 0;
 	

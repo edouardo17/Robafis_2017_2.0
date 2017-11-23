@@ -1,6 +1,11 @@
 package robafis.interfx.view;
 
+import java.io.IOException;
+import java.io.PipedWriter;
 import java.rmi.RemoteException;
+import java.time.Duration;
+
+import javax.naming.spi.InitialContextFactoryBuilder;
 
 import org.reactfx.util.FxTimer;
 
@@ -8,6 +13,12 @@ import eu.hansolo.medusa.Gauge;
 import eu.hansolo.medusa.Gauge.SkinType;
 import eu.hansolo.medusa.GaugeBuilder;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.binding.FloatExpression;
+import javafx.beans.property.FloatProperty;
+import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -28,6 +39,7 @@ import lejos.hardware.BrickFinder;
 import lejos.remote.ev3.RemoteEV3;
 import robafis.interfx.MainApp;
 import robafis.interfx.MotorControl_v2;
+import robafis.interfx.commMotor;
 
 public class InterfxOverviewController {
 	
@@ -60,12 +72,15 @@ public class InterfxOverviewController {
 			"    -fx-background-radius: 3,2,1;\n" + 
 			"    -fx-font-size: 14px;";
 	
-	public static RemoteEV3 ev3;
+	
 	public static int motorSpeed;
 	public static int steeringMotorSpeed;
 	public static int motorAcceleration;
 	public static int maximumSteeringAngle;
 	public static int stopingAcceleration;
+	
+	public static FloatProperty batteryLevel = new SimpleFloatProperty(0);
+	public static FloatProperty angle = new SimpleFloatProperty(0);
 	
 	private MainApp mainApp;
 	private Gauge angleGauge;
@@ -73,19 +88,23 @@ public class InterfxOverviewController {
 
 	Boolean started = false;
 	Boolean startedSteering = false;
+	public static Boolean running = true;
+	
 	
 	public InterfxOverviewController() {
 	}
 	
-	//Thread de MotorControl_v2
-    public void motorThread() {
+	// THREAD COMMUNICATION MOTEUR
+    public void commMotor_Thread() {
 		Runnable task = new Runnable() {
 			public void run() {
 				try {
-					MotorControl_v2.MotorControllerInit();
-				} catch (RemoteException | InterruptedException e) {
-					e.printStackTrace();
-				}
+					commMotor.connectToEV3();
+					commMotor.run();
+					} catch (IOException e) {e.printStackTrace();} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 			}
 		};
 		Thread backgroundThread = new Thread(task);
@@ -93,31 +112,40 @@ public class InterfxOverviewController {
 		backgroundThread.start();
 	}
     
-    public void batteryThread() {
-		Runnable task = new Runnable() {
-			public void run() {
-				try {
-					while(true) {showBatteryLevel(); Thread.sleep(5000);}
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		};
-		Thread backgroundThread = new Thread(task);
-		backgroundThread.setDaemon(true);
-		backgroundThread.start();
-	}
-    
-    public void parametersThread() {
+    // THREAD COMMANDE MOTEUR
+    public void motorControl_Thread() {
     	Runnable task = new Runnable() {
 			public void run() {
-				try {
-					showParameters();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				//TODO
+			}
+		};
+		Thread backgroundThread = new Thread(task);
+		backgroundThread.setDaemon(true);
+		backgroundThread.start();
+    }
+    
+    // THREAD NIVEAU DE BATTERY
+    public void battery_Thread() {
+    	Runnable task = new Runnable() {
+			public void run() {
+				commMotor.getBatteryLevel();
+				FxTimer.runPeriodically(Duration.ofSeconds(30), () -> {
+				 commMotor.fifoQueue.add(99);
+				});
+			}
+		};
+		Thread backgroundThread = new Thread(task);
+		backgroundThread.setDaemon(true);
+		backgroundThread.start();
+    }
+    
+    // THREAD PARAMETRES
+    public void params_Thread() {
+    	Runnable task = new Runnable() {
+			public void run() {
+				FxTimer.runPeriodically(Duration.ofMillis(200), () -> {
+					commMotor.fifoQueue.add(98);
+				});
 			}
 		};
 		Thread backgroundThread = new Thread(task);
@@ -125,23 +153,44 @@ public class InterfxOverviewController {
 		backgroundThread.start();
     }
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@FXML
-	private void initialize() {
+	private void initialize() throws IOException, InterruptedException {
+		
+		final ChangeListener batteryLevelListener = new ChangeListener() {
+		      @Override
+		      public void changed(ObservableValue observableValue, Object oldValue,
+		          Object newValue) {batteryGauge.setValue(batteryLevel.floatValue());}
+		    };
+		    
+		    batteryLevel.addListener(batteryLevelListener);
+		
+		final ChangeListener angleListener = new ChangeListener() {
+		      @Override
+		      public void changed(ObservableValue observableValue, Object oldValue,
+		          Object newValue) {angleGauge.setValue(angle.floatValue());}
+		    };
+		    
+		    angle.addListener(angleListener);
 		
 		angleGauge = GaugeBuilder.create()
-                .skinType(SkinType.MODERN)
-                .prefSize(500, 250)
-                .title("rpm")
-                .maxValue(720)
-                .foregroundBaseColor(Color.rgb(249, 249, 249))
-                .knobColor(Color.BLACK)
+                .skinType(SkinType.HORIZONTAL)
+                .prefSize(1000, 500)
+                .title("ANGLE")
+                .titleColor(Color.BLACK)
+                .maxValue(90)
+                .minValue(-90)
+                .value(0)
                 .animated(true)
-                .animationDuration(500)
+                .thresholdVisible(true)
+                .threshold(50)
+                .thresholdColor(Color.ORANGERED)
+                .animationDuration(180)
                 .build();
 		
 		batteryGauge = (GaugeBuilder.create()
                 .skinType(SkinType.BATTERY)
-                .value(70))
+                .value(100))
 				.prefWidth(500)
                 .gradientBarEnabled(true) // Gradient filled bar should be visible  
                 .gradientBarStops(new Stop(1.0, Color.GREEN), // Gradient for gradient bar  
@@ -160,23 +209,20 @@ public class InterfxOverviewController {
 		infoBox.setAlignment(Pos.CENTER_RIGHT);
 		infoBox.setText("Interfx initialization complete");
 		
-		motor1Status.setImage(new Image("file:ressources/icons/ko.png"));
-		motor2Status.setImage(new Image("file:ressources/icons/ko.png"));
-		steeringStatus.setImage(new Image("file:ressources/icons/ko.png"));
+		commMotor_Thread();
+		battery_Thread();
+		params_Thread();
+		
+		motor1Status.setImage(new Image("file:ressources/icons/ok.png"));
+		motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
+		steeringStatus.setImage(new Image("file:ressources/icons/ok.png"));
 	}
 	
 	@FXML
 	private void connectToEV3() throws RemoteException, InterruptedException {
 		
-		ev3 = (RemoteEV3) BrickFinder.getDefault();
-		
 		infoBox.setText("Initialising motors");
-		
 		setAllEvents();
-		
-		motor1Status.setImage(new Image("file:ressources/icons/ok.png"));
-		motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
-		steeringStatus.setImage(new Image("file:ressources/icons/ok.png"));
 	}
 	
 	private void getParameters() {
@@ -186,7 +232,7 @@ public class InterfxOverviewController {
 		} else motorSpeed = Integer.parseInt(motorSpeedInput.getText());
 		
 		if(steeringMotorSpeedInput.getText().contentEquals("")) {
-			steeringMotorSpeed = 150;
+			steeringMotorSpeed = 20;
 		} else steeringMotorSpeed = Integer.parseInt(steeringMotorSpeedInput.getText());
 		
 		if(motorAccelerationInput.getText().contentEquals("")) {
@@ -207,36 +253,25 @@ public class InterfxOverviewController {
 		
 		getParameters();
 		
-		motorThread();
-		batteryThread();
-		parametersThread();
+//		motorThread();
+//		batteryThread();
+//		parametersThread();
 		
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
 				if (event.getCode() == KeyCode.NUMPAD4 && !startedSteering) {
-					MotorControl_v2.flag4pressed=1;
+					commMotor.fifoQueue.add(4);
 					startedSteering = true;
 					boutonGauche.setStyle(buttonPressedStyle);
-//					try {
-//						boutonGauche.setStyle(buttonPressedStyle);
-//						MotorControl_v2.TurnLeft();
-//					} catch (RemoteException e) {
-//						e.printStackTrace();
-//					}
 				}
 				
 				if (event.getCode() == KeyCode.NUMPAD6 && !startedSteering) {
-					MotorControl_v2.flag6pressed=1;
+					commMotor.fifoQueue.add(6);
 					startedSteering = true;
 					boutonDroite.setStyle(buttonPressedStyle);
-//					try {
-//						boutonDroite.setStyle(buttonPressedStyle);
-//						MotorControl_v2.TurnRight();
-//					} catch (RemoteException e) {
-//						e.printStackTrace();
-//					}
 				}
+				
 				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
 					started = true;
 					try {
@@ -296,49 +331,22 @@ public class InterfxOverviewController {
 					}
 				}
 				
-//				if ((event.getCode() == KeyCode.NUMPAD4 && startedSteering) || (event.getCode() == KeyCode.NUMPAD6 && startedSteering)) {
-//					startedSteering = false;
-//					try {
-//						boutonGauche.setStyle("");
-//						boutonDroite.setStyle("");
-//						MotorControl_v2.returnToZero();
-//					} catch (RemoteException e) {
-//						e.printStackTrace();
-//					}
-//				}
-				
 				if ((event.getCode() == KeyCode.NUMPAD6) && startedSteering) {
 					startedSteering = false;
 					boutonDroite.setStyle("");
-					MotorControl_v2.flag6pressed=0;
+					commMotor.fifoQueue.add(0);
 				}
 				
 				if ((event.getCode() == KeyCode.NUMPAD4) && startedSteering) {
 					startedSteering = false;
 					boutonGauche.setStyle("");
-					MotorControl_v2.flag4pressed=0;
+					commMotor.fifoQueue.add(0);
 				}
 			}
 		});
 	}
 	
-	private void showBatteryLevel() throws InterruptedException {
-			batteryGauge.setValue(getBatteryLevel());
-	}
-	
 	private void showParameters() throws InterruptedException {
-		while(true) {
-			angleGauge.setValue(MotorControl_v2.angle);
-			Thread.sleep(300);
-		}
-	}
-	
-	private float getBatteryLevel() {
-		float voltage = Battery.getVoltage();
-		float maximumVoltage = (float) 2.75;
-		float currentVoltage = (float) (((voltage-6.25)/maximumVoltage)*100);
-		
-		return currentVoltage;
 	}
 	
 	public void setMainApp(MainApp mainApp) {

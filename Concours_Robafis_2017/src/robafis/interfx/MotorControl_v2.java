@@ -26,20 +26,19 @@ import sun.tools.jar.Main;
 
 public class MotorControl_v2 {
 	
-	static RMIRegulatedMotor leftMotor = InterfxOverviewController.ev3.createRegulatedMotor("B",  'L');
-    static RMIRegulatedMotor rightMotor = InterfxOverviewController.ev3.createRegulatedMotor("C", 'L');
-    static RMIRegulatedMotor steeringMotor = InterfxOverviewController.ev3.createRegulatedMotor("D", 'M');
+	static RMIRegulatedMotor leftMotor = commMotor.ev3.createRegulatedMotor("B",  'L');
+    static RMIRegulatedMotor rightMotor = commMotor.ev3.createRegulatedMotor("C", 'L');
+    static RMIRegulatedMotor steeringMotor = commMotor.ev3.createRegulatedMotor("D", 'M');
     public static int flag4pressed = 0;
     public static int flag6pressed = 0;
-    public static volatile float angle = 0;
     
     public static void monitorAngle() {
 		Runnable task = new Runnable() {
 			public void run() {
 				while(true) {
 					try {
-						angle = steeringMotor.getTachoCount();
-						Thread.sleep(300);
+						commMotor.angle = steeringMotor.getTachoCount();
+						Thread.sleep(10);
 					} catch (RemoteException | InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -57,54 +56,26 @@ public class MotorControl_v2 {
 		steeringMotor.resetTachoCount();
         leftMotor.resetTachoCount();
         rightMotor.resetTachoCount();
-        
-        monitorAngle();
 		
         steeringMotor.setSpeed(InterfxOverviewController.steeringMotorSpeed);
 		
-		while(true) {
-			
-			if (flag4pressed==1) {
-				steeringMotor.forward();
-				flag4pressed = 2;
-			}
-			if (flag4pressed==0) {
-				steeringMotor.stop(true);
-				flag4pressed = 2;
-			}
-			if (flag6pressed==1) {
-				steeringMotor.backward();
-				flag6pressed = 2;
-			}
-			if (flag6pressed==0) {
-				steeringMotor.stop(true);
-				flag6pressed = 2;
-			}
-			
-//			if (flag4pressed==2) {
-//				returnToZero();
-//			}
-//			
-//			if (flag6pressed==2) {
-//				returnToZero();
-//			}
-			
-			Thread.sleep(1);
-		}
 	}
 	
 	public static void TurnLeft() throws RemoteException {
-		do {
-			steeringMotor.backward();
-		} while (steeringMotor.getTachoCount() >= -InterfxOverviewController.maximumSteeringAngle);
-		steeringMotor.stop(true);
+		steeringMotor.setSpeed(60);
+		steeringMotor.forward();
+//		do {
+//			steeringMotor.backward();
+//		} while (steeringMotor.getTachoCount() >= -InterfxOverviewController.maximumSteeringAngle);
+//		steeringMotor.stop(true);
 	}
 	
 	public static void TurnRight() throws RemoteException {
-		do {
-			steeringMotor.forward();
-		} while (steeringMotor.getTachoCount() <= InterfxOverviewController.maximumSteeringAngle);
-		steeringMotor.stop(true);
+		steeringMotor.backward();
+//		do {
+//			steeringMotor.forward();
+//		} while (steeringMotor.getTachoCount() <= InterfxOverviewController.maximumSteeringAngle);
+//		steeringMotor.stop(true);
 	}
 	
 	public static void CalibrateLeft() throws RemoteException {
@@ -118,27 +89,23 @@ public class MotorControl_v2 {
 	}
 	
 	public static void returnToZero() throws RemoteException {
-//		steeringMotor.stop(true);
-		steeringMotor.rotate(-steeringMotor.getTachoCount());
+		steeringMotor.stop(true);
+//		steeringMotor.rotate(-steeringMotor.getTachoCount());
 //		steeringMotor.stop(true);
 	}
 	
 	public static void MotorStartForward() throws RemoteException {
-		rightMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
-    	leftMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
-		rightMotor.setSpeed(InterfxOverviewController.motorSpeed);
-		leftMotor.setSpeed(InterfxOverviewController.motorSpeed);
-		rightMotor.forward();
-		leftMotor.forward();
+		rightMotor.setAcceleration(500);
+    	leftMotor.setAcceleration(500);
+		rightMotor.setSpeed(500);
+		leftMotor.setSpeed(500);
+		rightMotor.backward();
+		leftMotor.backward();
 	}
 	
 	public static void MotorStartBackward() throws RemoteException {
-		rightMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
-    	leftMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
-		rightMotor.setSpeed(InterfxOverviewController.motorSpeed);
-		leftMotor.setSpeed(InterfxOverviewController.motorSpeed);
-		rightMotor.backward();
-		leftMotor.backward();
+		rightMotor.forward();
+		leftMotor.forward();
 	}
 	
 	public static void MotorStop() throws RemoteException{
