@@ -21,6 +21,7 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.remote.ev3.RMIRegulatedMotor;
 import lejos.remote.ev3.RemoteEV3;
 import lejos.robotics.SampleProvider;
+import lejos.utility.Delay;
 import robafis.interfx.view.InterfxOverviewController;
 import sun.tools.jar.Main;
 
@@ -29,81 +30,51 @@ public class MotorControl_v2 {
 	static RMIRegulatedMotor leftMotor = commMotor.ev3.createRegulatedMotor("B",  'L');
     static RMIRegulatedMotor rightMotor = commMotor.ev3.createRegulatedMotor("C", 'L');
     static RMIRegulatedMotor steeringMotor = commMotor.ev3.createRegulatedMotor("D", 'M');
-    public static int flag4pressed = 0;
-    public static int flag6pressed = 0;
-    
-    public static void monitorAngle() {
-		Runnable task = new Runnable() {
-			public void run() {
-				while(true) {
-					try {
-						commMotor.angle = steeringMotor.getTachoCount();
-						Thread.sleep(10);
-					} catch (RemoteException | InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-		    	}
-			}
-		};
-		Thread backgroundThread = new Thread(task);
-		backgroundThread.setDaemon(true);
-		backgroundThread.start();
+	
+	public static void resetParameters() throws RemoteException {
+		steeringMotor.setSpeed(InterfxOverviewController.steeringMotorSpeed);
+
+		rightMotor.setSpeed(InterfxOverviewController.motorSpeed);
+		leftMotor.setSpeed(InterfxOverviewController.motorSpeed);
 	}
 	
-	public static void MotorControllerInit() throws RemoteException, InterruptedException{
+	public static void autoRun() throws RemoteException {
+		leftMotor.setSpeed(500);
+		rightMotor.setSpeed(500);
+		leftMotor.rotate(-1930, true);
+		rightMotor.rotate(-1930, false);
 		
-		steeringMotor.resetTachoCount();
-        leftMotor.resetTachoCount();
-        rightMotor.resetTachoCount();
-		
-        steeringMotor.setSpeed(InterfxOverviewController.steeringMotorSpeed);
-		
+		leftMotor.rotate(-1200, true);
+		rightMotor.rotate(-1200, true);
+		steeringMotor.rotate(-17,true);
+		Delay.msDelay(3000);
+		steeringMotor.rotate(20);
+//		leftMotor.rotate(-900, true);
+//		rightMotor.rotate(-900, true);
 	}
 	
 	public static void TurnLeft() throws RemoteException {
-		steeringMotor.setSpeed(60);
 		steeringMotor.forward();
-//		do {
-//			steeringMotor.backward();
-//		} while (steeringMotor.getTachoCount() >= -InterfxOverviewController.maximumSteeringAngle);
-//		steeringMotor.stop(true);
 	}
 	
 	public static void TurnRight() throws RemoteException {
 		steeringMotor.backward();
-//		do {
-//			steeringMotor.forward();
-//		} while (steeringMotor.getTachoCount() <= InterfxOverviewController.maximumSteeringAngle);
-//		steeringMotor.stop(true);
 	}
 	
-	public static void CalibrateLeft() throws RemoteException {
-		steeringMotor.rotate(-2);
-		steeringMotor.resetTachoCount();
-	}
-	
-	public static void CalibrateRight() throws RemoteException {
-		steeringMotor.rotate(2);
-		steeringMotor.resetTachoCount();
-	}
-	
-	public static void returnToZero() throws RemoteException {
+	public static void steeringStop() throws RemoteException {
 		steeringMotor.stop(true);
-//		steeringMotor.rotate(-steeringMotor.getTachoCount());
-//		steeringMotor.stop(true);
 	}
 	
 	public static void MotorStartForward() throws RemoteException {
-		rightMotor.setAcceleration(500);
-    	leftMotor.setAcceleration(500);
-		rightMotor.setSpeed(500);
-		leftMotor.setSpeed(500);
+		rightMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
+    	leftMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
 		rightMotor.backward();
 		leftMotor.backward();
 	}
 	
 	public static void MotorStartBackward() throws RemoteException {
+		rightMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
+    	leftMotor.setAcceleration(InterfxOverviewController.motorAcceleration);
 		rightMotor.forward();
 		leftMotor.forward();
 	}
@@ -122,5 +93,15 @@ public class MotorControl_v2 {
 		leftMotor.close();
 		rightMotor.close();
 		steeringMotor.close();
+	}
+	
+	public static void CalibrateLeft() throws RemoteException {
+		steeringMotor.rotate(3);
+		steeringMotor.resetTachoCount();
+	}
+	
+	public static void CalibrateRight() throws RemoteException {
+		steeringMotor.rotate(-3);
+		steeringMotor.resetTachoCount();
 	}
 }

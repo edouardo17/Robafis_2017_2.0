@@ -38,7 +38,6 @@ public class MainApp extends Application {
     
     @Override
     public void stop() throws RemoteException {
-//    	MotorControl_v2.ClosePorts();
     	InterfxOverviewController.running=false;
     }
 
@@ -54,8 +53,8 @@ public class MainApp extends Application {
 
             // Affiche la scene qui contient le RootLayout
             Scene scene = new Scene(rootLayout);
-            primaryStage.setWidth(1000);
-            primaryStage.setHeight(760);
+            primaryStage.setWidth(1300);
+            primaryStage.setHeight(960);
             primaryStage.setScene(scene);
             primaryStage.show();
 

@@ -12,6 +12,8 @@ import org.reactfx.util.FxTimer;
 import eu.hansolo.medusa.Gauge;
 import eu.hansolo.medusa.Gauge.SkinType;
 import eu.hansolo.medusa.GaugeBuilder;
+import eu.hansolo.medusa.Section;
+import eu.hansolo.medusa.TickMarkType;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.FloatExpression;
@@ -26,6 +28,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -43,26 +46,35 @@ import robafis.interfx.commMotor;
 
 public class InterfxOverviewController {
 	
-	@FXML private Button connectToEV3;
+	@FXML private Button setParameters;
 	@FXML private Button boutonAvance;
 	@FXML private Button boutonRecule;
 	@FXML private Button boutonGauche;
 	@FXML private Button boutonDroite;
+	@FXML private Button resetParameters;
 	
 	@FXML private Label infoBox;
+	@FXML private Label warningBox;
 	
 	@FXML private TextField motorSpeedInput;
 	@FXML private TextField steeringMotorSpeedInput;
 	@FXML private TextField motorAccelerationInput;
 	@FXML private TextField maximumSteeringAngleInput;
 	@FXML private TextField stopingAccelerationInput;
+	@FXML private Slider motorSpeedSlider;
+	@FXML private Slider steeringMotorSpeedSlider;
+	@FXML private Slider motorAccelerationSlider;
+	@FXML private Slider stopingAccelerationSlider;
+	@FXML private Slider maximumSteeringAngleSlider;
 	
 	@FXML private ImageView motor1Status;
 	@FXML private ImageView motor2Status;
 	@FXML private ImageView steeringStatus;
+	@FXML private ImageView warningStatus;
 	
 	@FXML private GridPane batteryPane;
 	@FXML private GridPane anglePane;
+	@FXML private GridPane speedPane;
 	
 	private String buttonPressedStyle = "-fx-background-color: \n" + 
 			"        #3c7fb1,\n" + 
@@ -81,10 +93,12 @@ public class InterfxOverviewController {
 	
 	public static FloatProperty batteryLevel = new SimpleFloatProperty(0);
 	public static FloatProperty angle = new SimpleFloatProperty(0);
+	public static FloatProperty speed = new SimpleFloatProperty(0);
 	
 	private MainApp mainApp;
 	private Gauge angleGauge;
 	private Gauge batteryGauge;
+	private Gauge speedGauge;
 
 	Boolean started = false;
 	Boolean startedSteering = false;
@@ -100,9 +114,11 @@ public class InterfxOverviewController {
 			public void run() {
 				try {
 					commMotor.connectToEV3();
+					motor1Status.setImage(new Image("file:ressources/icons/ok.png"));
+					motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
+					steeringStatus.setImage(new Image("file:ressources/icons/ok.png"));
 					commMotor.run();
 					} catch (IOException e) {e.printStackTrace();} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 			}
@@ -112,19 +128,7 @@ public class InterfxOverviewController {
 		backgroundThread.start();
 	}
     
-    // THREAD COMMANDE MOTEUR
-    public void motorControl_Thread() {
-    	Runnable task = new Runnable() {
-			public void run() {
-				//TODO
-			}
-		};
-		Thread backgroundThread = new Thread(task);
-		backgroundThread.setDaemon(true);
-		backgroundThread.start();
-    }
-    
-    // THREAD NIVEAU DE BATTERY
+    // THREAD NIVEAU DE BATTERIE
     public void battery_Thread() {
     	Runnable task = new Runnable() {
 			public void run() {
@@ -152,10 +156,35 @@ public class InterfxOverviewController {
 		backgroundThread.setDaemon(true);
 		backgroundThread.start();
     }
+    
+    //THREAD CHRONOMETER
+    public void chronometer() {
+    	Runnable task = new Runnable() {
+    		public void run() {
+    			FxTimer.runPeriodically(Duration.ofSeconds(1), () -> {
+    				
+    			});
+    		}
+    	};
+    	Thread chronometerThread = new Thread(task);
+    	chronometerThread.setDaemon(true);
+    	chronometerThread.start();
+    }
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@FXML
 	private void initialize() throws IOException, InterruptedException {
+		
+		infoBox.setAlignment(Pos.CENTER_RIGHT);
+		infoBox.setText("Ready to rock!");
+		
+		resetParameters.setDisable(true);
+		warningStatus.setVisible(false);
+		warningBox.setVisible(false);
+		warningStatus.setImage(new Image("file:ressources/icons/warning-icon-hi.png"));
+		motor1Status.setImage(new Image("file:ressources/icons/ko.png"));
+		motor2Status.setImage(new Image("file:ressources/icons/ko.png"));
+		steeringStatus.setImage(new Image("file:ressources/icons/ko.png"));
 		
 		final ChangeListener batteryLevelListener = new ChangeListener() {
 		      @Override
@@ -173,24 +202,32 @@ public class InterfxOverviewController {
 		    
 		    angle.addListener(angleListener);
 		
+	    final ChangeListener speedListener = new ChangeListener() {
+		      @Override
+		      public void changed(ObservableValue observableValue, Object oldValue,
+		          Object newValue) {speedGauge.setValue(speed.floatValue());}
+		    };
+		    
+		    speed.addListener(speedListener);
+		
 		angleGauge = GaugeBuilder.create()
                 .skinType(SkinType.HORIZONTAL)
                 .prefSize(1000, 500)
                 .title("ANGLE")
                 .titleColor(Color.BLACK)
-                .maxValue(90)
-                .minValue(-90)
+                .maxValue(85)
+                .minValue(-85)
                 .value(0)
                 .animated(true)
-                .thresholdVisible(true)
-                .threshold(50)
-                .thresholdColor(Color.ORANGERED)
-                .animationDuration(180)
+                .sectionsVisible(true)
+                .sections(new Section(40, 100, Color.ORANGERED), new Section(-100,-40, Color.ORANGERED))
+                .checkSectionsForValue(true)
+                .animationDuration(100)
                 .build();
 		
-		batteryGauge = (GaugeBuilder.create()
+		batteryGauge = GaugeBuilder.create()
                 .skinType(SkinType.BATTERY)
-                .value(100))
+                .value(100)
 				.prefWidth(500)
                 .gradientBarEnabled(true) // Gradient filled bar should be visible  
                 .gradientBarStops(new Stop(1.0, Color.GREEN), // Gradient for gradient bar  
@@ -200,62 +237,135 @@ public class InterfxOverviewController {
                                      new Stop(0.0, Color.ORANGERED))
                 .build();
 		
+		speedGauge = GaugeBuilder.create()
+				.skinType(SkinType.HORIZONTAL)
+				.prefSize(1000,500)
+				.title("SPEED")
+				.titleColor(Color.BLACK)
+				.minValue(0)
+				.maxValue(800)
+				.value(0)
+				.animated(true)
+				.animationDuration(100)
+				.sectionsVisible(true)
+				.sections(new Section(720, 800, Color.ORANGERED))
+				.build();
+		
 		batteryPane.setPadding(new Insets(20));
 		batteryPane.add(batteryGauge, 0, 0);
 		
 		anglePane.setPadding(new Insets(20));
 		anglePane.add(angleGauge, 0, 0);
 		
-		infoBox.setAlignment(Pos.CENTER_RIGHT);
-		infoBox.setText("Interfx initialization complete");
+		speedPane.setPadding(new Insets(20));
+		speedPane.add(speedGauge, 0, 0);
 		
 		commMotor_Thread();
 		battery_Thread();
 		params_Thread();
-		
-		motor1Status.setImage(new Image("file:ressources/icons/ok.png"));
-		motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
-		steeringStatus.setImage(new Image("file:ressources/icons/ok.png"));
+		configureSliders();
 	}
 	
 	@FXML
-	private void connectToEV3() throws RemoteException, InterruptedException {
-		
-		infoBox.setText("Initialising motors");
+	private void setParameters() throws RemoteException, InterruptedException {
 		setAllEvents();
+		setParameters.setDisable(true);
+		resetParameters.setDisable(false);
 	}
 	
-	private void getParameters() {
+	private void configureSliders() {
+		stopingAccelerationSlider.setSnapToTicks(true);
+		maximumSteeringAngleSlider.setSnapToTicks(true);
+		motorAccelerationSlider.setSnapToTicks(true);
+		motorSpeedSlider.setSnapToTicks(true);
+		steeringMotorSpeedSlider.setSnapToTicks(true);
+		
+		stopingAccelerationInput.textProperty().addListener((observable, oldValue, newValue) -> {
+			if(!newValue.contentEquals("")) stopingAccelerationSlider.setValue(Double.parseDouble(newValue));
+		});
+		stopingAccelerationSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			stopingAccelerationInput.setText(Integer.toString(newValue.intValue()));
+			warningBox.setVisible(true);
+			warningStatus.setVisible(true);
+		});
+		
+		motorAccelerationInput.textProperty().addListener((observable, oldValue, newValue) -> {
+			if(!newValue.contentEquals("")) motorAccelerationSlider.setValue(Double.parseDouble(newValue));
+		});
+		motorAccelerationSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			motorAccelerationInput.setText(Integer.toString(newValue.intValue()));
+			warningBox.setVisible(true);
+			warningStatus.setVisible(true);
+		});
+		
+		maximumSteeringAngleInput.textProperty().addListener((observable, oldValue, newValue) -> {
+			if(!newValue.contentEquals("")) maximumSteeringAngleSlider.setValue(Double.parseDouble(newValue));
+		});
+		maximumSteeringAngleSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			maximumSteeringAngleInput.setText(Integer.toString(newValue.intValue()));
+			warningBox.setVisible(true);
+			warningStatus.setVisible(true);
+		});
+		
+		motorSpeedInput.textProperty().addListener((observable, oldValue, newValue) -> {
+			if(!newValue.contentEquals("")) motorSpeedSlider.setValue(Double.parseDouble(newValue));
+		});
+		motorSpeedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			motorSpeedInput.setText(Integer.toString(newValue.intValue()));
+			warningBox.setVisible(true);
+			warningStatus.setVisible(true);
+		});
+		
+		steeringMotorSpeedInput.textProperty().addListener((observable, oldValue, newValue) -> {
+			if(!newValue.contentEquals("")) steeringMotorSpeedSlider.setValue(Double.parseDouble(newValue));
+		});
+		steeringMotorSpeedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+			steeringMotorSpeedInput.setText(Integer.toString(newValue.intValue()));
+			warningBox.setVisible(true);
+			warningStatus.setVisible(true);
+		});
+	}
+	
+	@FXML
+	private void getParameters() throws RemoteException {
 		
 		if(motorSpeedInput.getText().contentEquals("")) {
 			motorSpeed = 720;
+			motorSpeedInput.setText("720");
 		} else motorSpeed = Integer.parseInt(motorSpeedInput.getText());
 		
 		if(steeringMotorSpeedInput.getText().contentEquals("")) {
-			steeringMotorSpeed = 20;
+			steeringMotorSpeed = 60;
+			steeringMotorSpeedInput.setText("60");
 		} else steeringMotorSpeed = Integer.parseInt(steeringMotorSpeedInput.getText());
 		
 		if(motorAccelerationInput.getText().contentEquals("")) {
-			motorAcceleration = 500;
+			motorAcceleration = 600;
+			motorAccelerationInput.setText("600");
 		} else motorAcceleration = Integer.parseInt(motorAccelerationInput.getText());
 		
 		if(maximumSteeringAngleInput.getText().contentEquals("")) {
 			maximumSteeringAngle = 40;
+			maximumSteeringAngleInput.setText("40");
 		} else maximumSteeringAngle = Integer.parseInt(maximumSteeringAngleInput.getText());
 		
 		if(stopingAccelerationInput.getText().contentEquals("")) {
-			stopingAcceleration = 500;
+			stopingAcceleration = 200;
+			stopingAccelerationInput.setText("200");
 		} else stopingAcceleration = Integer.parseInt(stopingAccelerationInput.getText());
+		
+		MotorControl_v2.resetParameters();
+		
+		warningBox.setVisible(false);
+		warningStatus.setVisible(false);
+		angleGauge.clearSections();
+		angleGauge.setSections(new Section(maximumSteeringAngle, 100, Color.ORANGERED), new Section(-100,-maximumSteeringAngle, Color.ORANGERED));
 	}
 	
 	private void setAllEvents() throws RemoteException, InterruptedException {
 		Scene scene = mainApp.getPrimaryStage().getScene();
 		
 		getParameters();
-		
-//		motorThread();
-//		batteryThread();
-//		parametersThread();
 		
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
@@ -272,23 +382,16 @@ public class InterfxOverviewController {
 					boutonDroite.setStyle(buttonPressedStyle);
 				}
 				
-				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
-					started = true;
-					try {
-						boutonRecule.setStyle(buttonPressedStyle);
-						MotorControl_v2.MotorStartForward();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
-				}
 				if (event.getCode() == KeyCode.NUMPAD8 && !started) {
+					commMotor.fifoQueue.add(8);
 					started = true;
-					try {
-						boutonAvance.setStyle(buttonPressedStyle);
-						MotorControl_v2.MotorStartBackward();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
+					boutonAvance.setStyle(buttonPressedStyle);
+				}
+				
+				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
+					commMotor.fifoQueue.add(5);
+					started = true;
+					boutonRecule.setStyle(buttonPressedStyle);
 				}
 				
 				if (event.getCode() == KeyCode.NUMPAD1) {
@@ -305,30 +408,26 @@ public class InterfxOverviewController {
 						e.printStackTrace();
 					}
 				}
+				
+				if (event.getCode() == KeyCode.NUMPAD9) {
+					commMotor.fifoQueue.add(9);
+				}
 			}
 		});
 		
 		scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
-				if (event.getCode() == KeyCode.NUMPAD8) {
+				if (event.getCode() == KeyCode.NUMPAD8 && started) {
 					started = false;
-					try {
-						boutonAvance.setStyle("");
-						MotorControl_v2.MotorStop();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
+					boutonAvance.setStyle("");
+					commMotor.fifoQueue.add(-1);
 				}
 				
-				if (event.getCode() == KeyCode.NUMPAD5) {
+				if (event.getCode() == KeyCode.NUMPAD5 && started) {
 					started = false;
-					try {
-						boutonRecule.setStyle("");
-						MotorControl_v2.MotorStop();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
+					boutonRecule.setStyle("");
+					commMotor.fifoQueue.add(-1);
 				}
 				
 				if ((event.getCode() == KeyCode.NUMPAD6) && startedSteering) {
@@ -344,9 +443,6 @@ public class InterfxOverviewController {
 				}
 			}
 		});
-	}
-	
-	private void showParameters() throws InterruptedException {
 	}
 	
 	public void setMainApp(MainApp mainApp) {
