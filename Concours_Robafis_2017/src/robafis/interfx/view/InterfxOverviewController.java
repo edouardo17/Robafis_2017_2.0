@@ -1,11 +1,8 @@
 package robafis.interfx.view;
 
 import java.io.IOException;
-import java.io.PipedWriter;
 import java.rmi.RemoteException;
 import java.time.Duration;
-
-import javax.naming.spi.InitialContextFactoryBuilder;
 
 import org.reactfx.util.FxTimer;
 
@@ -13,10 +10,6 @@ import eu.hansolo.medusa.Gauge;
 import eu.hansolo.medusa.Gauge.SkinType;
 import eu.hansolo.medusa.GaugeBuilder;
 import eu.hansolo.medusa.Section;
-import eu.hansolo.medusa.TickMarkType;
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
-import javafx.beans.binding.FloatExpression;
 import javafx.beans.property.FloatProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.value.ChangeListener;
@@ -37,9 +30,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Stop;
-import lejos.hardware.Battery;
-import lejos.hardware.BrickFinder;
-import lejos.remote.ev3.RemoteEV3;
 import robafis.interfx.MainApp;
 import robafis.interfx.MotorControl_v2;
 import robafis.interfx.commMotor;
@@ -114,6 +104,7 @@ public class InterfxOverviewController {
 			public void run() {
 				try {
 					commMotor.connectToEV3();
+					setParameters.setDisable(false);
 					motor1Status.setImage(new Image("file:ressources/icons/ok.png"));
 					motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
 					steeringStatus.setImage(new Image("file:ressources/icons/ok.png"));
@@ -178,6 +169,7 @@ public class InterfxOverviewController {
 		infoBox.setAlignment(Pos.CENTER_RIGHT);
 		infoBox.setText("Ready to rock!");
 		
+		setParameters.setDisable(true);
 		resetParameters.setDisable(true);
 		warningStatus.setVisible(false);
 		warningBox.setVisible(false);

@@ -2,28 +2,9 @@ package robafis.interfx;
 
 import java.rmi.RemoteException;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import lejos.hardware.Audio;
-import lejos.hardware.BrickFinder;
-import lejos.hardware.Power;
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.lcd.LCD;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.motor.Motor;
-import lejos.hardware.port.MotorPort;
-import lejos.hardware.port.Port;
-import lejos.hardware.port.SensorPort;
-import lejos.hardware.sensor.EV3TouchSensor;
-import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.SensorMode;
-import lejos.hardware.sensor.SensorModes;
 import lejos.remote.ev3.RMIRegulatedMotor;
-import lejos.remote.ev3.RemoteEV3;
-import lejos.robotics.SampleProvider;
 import lejos.utility.Delay;
 import robafis.interfx.view.InterfxOverviewController;
-import sun.tools.jar.Main;
 
 public class MotorControl_v2 {
 	
