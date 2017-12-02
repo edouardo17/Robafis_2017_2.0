@@ -1,6 +1,10 @@
 package robafis.interfx.view;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.time.Duration;
 
@@ -12,16 +16,18 @@ import eu.hansolo.medusa.GaugeBuilder;
 import eu.hansolo.medusa.Section;
 import javafx.beans.property.FloatProperty;
 import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -32,7 +38,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Stop;
 import robafis.interfx.MainApp;
 import robafis.interfx.MotorControl_v2;
+import robafis.interfx.Serveur;
 import robafis.interfx.commMotor;
+import robafis.interfx.view.Time;
 
 public class InterfxOverviewController {
 	
@@ -42,10 +50,16 @@ public class InterfxOverviewController {
 	@FXML private Button boutonGauche;
 	@FXML private Button boutonDroite;
 	@FXML private Button resetParameters;
+	@FXML private Button chrono_start;
+	@FXML private Button chrono_stop;
+	@FXML private Button chrono_reset;
+	@FXML private Button chrono_set120;
+	@FXML private Button chrono_set360;
 	
-	@FXML private Label infoBox;
 	@FXML private Label warningBox;
 	
+	@FXML private TextArea infoBox;
+	@FXML private TextField portInput;
 	@FXML private TextField motorSpeedInput;
 	@FXML private TextField steeringMotorSpeedInput;
 	@FXML private TextField motorAccelerationInput;
@@ -65,6 +79,7 @@ public class InterfxOverviewController {
 	@FXML private GridPane batteryPane;
 	@FXML private GridPane anglePane;
 	@FXML private GridPane speedPane;
+	@FXML private GridPane chronoPane;
 	
 	private String buttonPressedStyle = "-fx-background-color: \n" + 
 			"        #3c7fb1,\n" + 
@@ -80,6 +95,7 @@ public class InterfxOverviewController {
 	public static int motorAcceleration;
 	public static int maximumSteeringAngle;
 	public static int stopingAcceleration;
+	public static int valueChrono = 120;
 	
 	public static FloatProperty batteryLevel = new SimpleFloatProperty(0);
 	public static FloatProperty angle = new SimpleFloatProperty(0);
@@ -89,6 +105,11 @@ public class InterfxOverviewController {
 	private Gauge angleGauge;
 	private Gauge batteryGauge;
 	private Gauge speedGauge;
+	static Gauge chronometer;
+	
+	private Time timeRemaining = new Time(new CountdownController());
+	
+	public static StringProperty message = new SimpleStringProperty("");
 
 	Boolean started = false;
 	Boolean startedSteering = false;
@@ -103,7 +124,12 @@ public class InterfxOverviewController {
 		Runnable task = new Runnable() {
 			public void run() {
 				try {
+					message.set("Connecting to EV3, please wait...\n");
 					commMotor.connectToEV3();
+					message.set("Connection established!\n");
+					message.set("Launching battery thread\n");
+					message.set("Launching parameters thread\n");
+					message.set("\nReady\n");
 					setParameters.setDisable(false);
 					motor1Status.setImage(new Image("file:ressources/icons/ok.png"));
 					motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
@@ -147,27 +173,10 @@ public class InterfxOverviewController {
 		backgroundThread.setDaemon(true);
 		backgroundThread.start();
     }
-    
-    //THREAD CHRONOMETER
-    public void chronometer() {
-    	Runnable task = new Runnable() {
-    		public void run() {
-    			FxTimer.runPeriodically(Duration.ofSeconds(1), () -> {
-    				
-    			});
-    		}
-    	};
-    	Thread chronometerThread = new Thread(task);
-    	chronometerThread.setDaemon(true);
-    	chronometerThread.start();
-    }
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@FXML
 	private void initialize() throws IOException, InterruptedException {
-		
-		infoBox.setAlignment(Pos.CENTER_RIGHT);
-		infoBox.setText("Ready to rock!");
 		
 		setParameters.setDisable(true);
 		resetParameters.setDisable(true);
@@ -201,6 +210,19 @@ public class InterfxOverviewController {
 		    };
 		    
 		    speed.addListener(speedListener);
+		    
+	    final ChangeListener infoListener = new ChangeListener() {
+		      @Override
+		      public void changed(ObservableValue observableValue, Object oldValue,
+		          Object newValue) {
+			    	  if (infoBox.getText() != null) {
+			    		  String oldText = infoBox.getText();
+			    		  infoBox.setText((String) oldText + newValue);
+			    	  }
+		    	  }
+		    };
+		    
+		    message.addListener(infoListener);
 		
 		angleGauge = GaugeBuilder.create()
                 .skinType(SkinType.HORIZONTAL)
@@ -220,7 +242,7 @@ public class InterfxOverviewController {
 		batteryGauge = GaugeBuilder.create()
                 .skinType(SkinType.BATTERY)
                 .value(100)
-				.prefWidth(500)
+				.prefSize(800, 300)
                 .gradientBarEnabled(true) // Gradient filled bar should be visible  
                 .gradientBarStops(new Stop(1.0, Color.GREEN), // Gradient for gradient bar  
                                      new Stop(0.75, Color.YELLOWGREEN),  
@@ -243,14 +265,33 @@ public class InterfxOverviewController {
 				.sections(new Section(720, 800, Color.ORANGERED))
 				.build();
 		
-		batteryPane.setPadding(new Insets(20));
+		chronometer = GaugeBuilder.create()
+				.skinType(SkinType.FLAT)
+				.title("CHRONO")
+				.titleColor(Color.WHITE)
+				.valueColor(Color.DEEPSKYBLUE)
+				.value(120)
+				.minValue(0)
+				.maxValue(120)
+				.animationDuration(850)
+				.animated(true)
+				.backgroundPaint(Color.DARKSLATEGREY)
+				.sectionsVisible(true)
+				.sections(new Section(0, 120, Color.LIMEGREEN))
+				.prefSize(1000, 500)
+				.build();
+		
+		batteryPane.setPadding(new Insets(0));
 		batteryPane.add(batteryGauge, 0, 0);
 		
-		anglePane.setPadding(new Insets(20));
+		anglePane.setPadding(new Insets(5));
 		anglePane.add(angleGauge, 0, 0);
 		
-		speedPane.setPadding(new Insets(20));
+		speedPane.setPadding(new Insets(5));
 		speedPane.add(speedGauge, 0, 0);
+		
+		chronoPane.setPadding(new Insets(5));
+		chronoPane.add(chronometer, 0, 0);
 		
 		commMotor_Thread();
 		battery_Thread();
@@ -259,10 +300,56 @@ public class InterfxOverviewController {
 	}
 	
 	@FXML
-	private void setParameters() throws RemoteException, InterruptedException {
+	private void chrono_start() throws InterruptedException {
+		Thread.sleep(1000);
+		timeRemaining.reset();
+		if (valueChrono == 120) timeRemaining.addMinutes(2); else timeRemaining.addMinutes(6);
+		Countdown.startCountdown(timeRemaining);
+    }
+	
+	@FXML
+	private void chrono_stop() {
+		Countdown.stopCountdown();
+	}
+	
+	@FXML
+	private void chrono_reset() {
+		chronometer.setMaxValue(valueChrono);
+		chronometer.addSection(new Section(0, valueChrono, Color.LIMEGREEN));
+		chronometer.setValue(valueChrono);
+	}
+	
+	@FXML
+	private void chrono_set120() {
+		valueChrono = 120;
+		chrono_reset();
+	}
+	
+	@FXML
+	private void chrono_set360() {
+		valueChrono = 360;
+		chrono_reset();
+	}
+	
+	@FXML
+	private void setParameters() throws InterruptedException, IOException {
+		message.set("Parameters have been set\n");
 		setAllEvents();
 		setParameters.setDisable(true);
 		resetParameters.setDisable(false);
+		
+		if (portInput.getText().contentEquals("")){
+			Serveur ts = new Serveur(2017);
+			portInput.setText("2017");
+			ts.open();
+		} else {
+			Serveur ts = new Serveur(Integer.parseInt(portInput.getText()));
+			ts.open();
+		}
+		
+		portInput.setDisable(true);
+		message.set("Connection is open on port "+portInput.getText());
+		message.set("\nReady...\n");
 	}
 	
 	private void configureSliders() {
@@ -279,6 +366,7 @@ public class InterfxOverviewController {
 			stopingAccelerationInput.setText(Integer.toString(newValue.intValue()));
 			warningBox.setVisible(true);
 			warningStatus.setVisible(true);
+			resetParameters.setDisable(false);
 		});
 		
 		motorAccelerationInput.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -288,6 +376,7 @@ public class InterfxOverviewController {
 			motorAccelerationInput.setText(Integer.toString(newValue.intValue()));
 			warningBox.setVisible(true);
 			warningStatus.setVisible(true);
+			resetParameters.setDisable(false);
 		});
 		
 		maximumSteeringAngleInput.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -297,6 +386,7 @@ public class InterfxOverviewController {
 			maximumSteeringAngleInput.setText(Integer.toString(newValue.intValue()));
 			warningBox.setVisible(true);
 			warningStatus.setVisible(true);
+			resetParameters.setDisable(false);
 		});
 		
 		motorSpeedInput.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -306,6 +396,7 @@ public class InterfxOverviewController {
 			motorSpeedInput.setText(Integer.toString(newValue.intValue()));
 			warningBox.setVisible(true);
 			warningStatus.setVisible(true);
+			resetParameters.setDisable(false);
 		});
 		
 		steeringMotorSpeedInput.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -315,6 +406,7 @@ public class InterfxOverviewController {
 			steeringMotorSpeedInput.setText(Integer.toString(newValue.intValue()));
 			warningBox.setVisible(true);
 			warningStatus.setVisible(true);
+			resetParameters.setDisable(false);
 		});
 	}
 	
@@ -352,6 +444,7 @@ public class InterfxOverviewController {
 		warningStatus.setVisible(false);
 		angleGauge.clearSections();
 		angleGauge.setSections(new Section(maximumSteeringAngle, 100, Color.ORANGERED), new Section(-100,-maximumSteeringAngle, Color.ORANGERED));
+		resetParameters.setDisable(true);
 	}
 	
 	private void setAllEvents() throws RemoteException, InterruptedException {
@@ -362,6 +455,25 @@ public class InterfxOverviewController {
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
+				
+				if (event.getCode() == KeyCode.ENTER) {
+					try {
+						InputStream ips=new FileInputStream("AutoRun.txt");
+						InputStreamReader ipsr=new InputStreamReader(ips);
+						BufferedReader br=new BufferedReader(ipsr);
+						String ligne;
+						while ((ligne=br.readLine())!=null){
+							if (!ligne.contains("#")) {
+								commMotor.fifoQueue.add(Integer.parseInt(ligne));
+								System.out.println("J'ajoute "+ligne);
+								Thread.sleep(10);
+							}
+						}
+						br.close(); 
+					} catch (IOException | InterruptedException e) {e.printStackTrace();}
+					
+				}
+				
 				if (event.getCode() == KeyCode.NUMPAD4 && !startedSteering) {
 					commMotor.fifoQueue.add(4);
 					startedSteering = true;
@@ -399,10 +511,6 @@ public class InterfxOverviewController {
 					} catch (RemoteException e) {
 						e.printStackTrace();
 					}
-				}
-				
-				if (event.getCode() == KeyCode.NUMPAD9) {
-					commMotor.fifoQueue.add(9);
 				}
 			}
 		});

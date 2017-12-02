@@ -1,7 +1,5 @@
 package robafis.interfx;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.LinkedList;
@@ -18,41 +16,54 @@ public class commMotor {
     public static float angle = 0;
     public static float speed = 0;
     static int instr;
+    static float maxSteeringAngle = (float) 40.0;
     public static Boolean startedSteering = false;
     static int localAngle;
-    static File f = new File ("AutoRun.txt");
 	
 	public static Queue<Integer> fifoQueue = new LinkedList<Integer>();
 	
 	public static void run() throws IOException, InterruptedException {
 		
-		FileWriter fw2 = new FileWriter (f);
+//		if(InterfxOverviewController.maximumSteeringAngle != 0) {
+//			maxSteeringAngle = InterfxOverviewController.maximumSteeringAngle;
+//		} else {
+//			maxSteeringAngle = 60;
+//		}
+		
+		float ratio = (float) maxSteeringAngle/ (float) 60.0;
 		
 		while(InterfxOverviewController.running) {
 			if (!fifoQueue.isEmpty()) {
 				
 				instr = fifoQueue.remove();
-				if (instr==4) {MotorControl_v2.TurnLeft(); startedSteering=true; fw2.write("4\n");}
-				if (instr==6) {MotorControl_v2.TurnRight(); startedSteering=true; fw2.write("6\n");}
-				if (instr==8) {MotorControl_v2.MotorStartForward(); fw2.write("8\n");}
-				if (instr==5) {MotorControl_v2.MotorStartBackward(); fw2.write("5\n"); System.out.println("writing 5");}
-				if (instr==-1) {MotorControl_v2.MotorStop(); fw2.write("-1\n");}
-				if (instr==0) {MotorControl_v2.steeringStop(); startedSteering=false; fw2.write("0\n");}
+				if (instr==4) {MotorControl_v2.TurnLeft(); startedSteering=true;}
+				if (instr==6) {MotorControl_v2.TurnRight(); startedSteering=true;}
+				if (instr==8) {MotorControl_v2.MotorStartForward();}
+				if (instr==5) {MotorControl_v2.MotorStartBackward();}
+				if (instr==-1) {MotorControl_v2.MotorStop();}
+				if (instr==0) {MotorControl_v2.steeringMotor.rotateTo(0, true);}
 				if (instr==9) {MotorControl_v2.autoRun();}
 				if (instr==98) getParams();
 				if (instr==99) getBatteryLevel();
-			}
-			else {
-				fw2.write("100\n");
-				if (!startedSteering) {
-					localAngle = MotorControl_v2.steeringMotor.getTachoCount();
-					if (localAngle>=4) MotorControl_v2.TurnRight();
-					else {if (localAngle<=-4) MotorControl_v2.TurnLeft();
-						else MotorControl_v2.steeringStop();
-					}
+				if (instr >= -160 && instr < -100) {MotorControl_v2.steeringMotor.rotateTo(Math.round(-((instr+100)*ratio)), true); startedSteering=true;}
+				if (instr >= 100 && instr <= 160) {MotorControl_v2.steeringMotor.rotateTo(Math.round(-((instr-100)*ratio)), true); startedSteering=true;}
+				if (instr >= 200 && instr <=920) {
+					MotorControl_v2.leftMotor.setSpeed(instr);
+					MotorControl_v2.rightMotor.setSpeed(instr);
+					MotorControl_v2.MotorStartForward();
 				}
 			}
-			fw2.flush();
+			else {
+				if (!startedSteering) {
+					try {
+						localAngle = MotorControl_v2.steeringMotor.getTachoCount();
+						if (localAngle>=4) MotorControl_v2.TurnRight();
+						else {if (localAngle<=-4) MotorControl_v2.TurnLeft();
+							else MotorControl_v2.steeringStop();
+						}
+					} catch (IndexOutOfBoundsException e) {InterfxOverviewController.message.set("Index out of bounds\n");}
+				}
+			}
 			Thread.sleep(10);
 		}
 	}

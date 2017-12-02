@@ -26,14 +26,13 @@ public class MainApp extends Application {
         initRootLayout();
 
         showInterfxOverview();
-        
-        Serveur ts = new Serveur();
-        ts.open();
     }
     
     @Override
-    public void stop() throws RemoteException {
+    public void stop() throws IOException {
+    	Serveur.isRunning = false;
     	InterfxOverviewController.running=false;
+    	Serveur.server.close();
     }
 
     /**

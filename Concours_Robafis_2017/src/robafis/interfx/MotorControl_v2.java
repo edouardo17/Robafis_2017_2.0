@@ -30,8 +30,6 @@ public class MotorControl_v2 {
 		steeringMotor.rotate(-17,true);
 		Delay.msDelay(3000);
 		steeringMotor.rotate(20);
-//		leftMotor.rotate(-900, true);
-//		rightMotor.rotate(-900, true);
 	}
 	
 	public static void TurnLeft() throws RemoteException {
