@@ -43,84 +43,116 @@ import robafis.interfx.commMotor;
 import robafis.interfx.view.Time;
 
 public class InterfxOverviewController {
-	
-	@FXML private Button setParameters;
-	@FXML private Button boutonAvance;
-	@FXML private Button boutonRecule;
-	@FXML private Button boutonGauche;
-	@FXML private Button boutonDroite;
-	@FXML private Button resetParameters;
-	@FXML private Button chrono_start;
-	@FXML private Button chrono_stop;
-	@FXML private Button chrono_reset;
-	@FXML private Button chrono_set120;
-	@FXML private Button chrono_set360;
-	
-	@FXML private Label warningBox;
-	
-	@FXML private TextArea infoBox;
-	@FXML private TextField portInput;
-	@FXML private TextField motorSpeedInput;
-	@FXML private TextField steeringMotorSpeedInput;
-	@FXML private TextField motorAccelerationInput;
-	@FXML private TextField maximumSteeringAngleInput;
-	@FXML private TextField stopingAccelerationInput;
-	@FXML private Slider motorSpeedSlider;
-	@FXML private Slider steeringMotorSpeedSlider;
-	@FXML private Slider motorAccelerationSlider;
-	@FXML private Slider stopingAccelerationSlider;
-	@FXML private Slider maximumSteeringAngleSlider;
-	
-	@FXML private ImageView motor1Status;
-	@FXML private ImageView motor2Status;
-	@FXML private ImageView steeringStatus;
-	@FXML private ImageView warningStatus;
-	
-	@FXML private GridPane batteryPane;
-	@FXML private GridPane anglePane;
-	@FXML private GridPane speedPane;
-	@FXML private GridPane chronoPane;
-	
-	private String buttonPressedStyle = "-fx-background-color: \n" + 
-			"        #3c7fb1,\n" + 
-			"        linear-gradient(#61adc6, #56c4ff),\n" + 
-			"        linear-gradient(#6dc9ff 0%, #6caed1 49%, #20acfc 50%, #6eb2d8 100%);\n" + 
-			"    -fx-background-insets: 0,1,2;\n" + 
-			"    -fx-background-radius: 3,2,1;\n" + 
-			"    -fx-font-size: 14px;";
-	
-	
+
+	@FXML
+	private Button setParameters;
+	@FXML
+	private Button boutonAvance;
+	@FXML
+	private Button boutonRecule;
+	@FXML
+	private Button boutonGauche;
+	@FXML
+	private Button boutonDroite;
+	@FXML
+	private Button resetParameters;
+	@FXML
+	private Button chrono_start;
+	@FXML
+	private Button chrono_stop;
+	@FXML
+	private Button chrono_reset;
+	@FXML
+	private Button chrono_set120;
+	@FXML
+	private Button chrono_set360;
+	@FXML
+	private Button setRaceParams;
+	@FXML
+	private Button setPadParams;
+
+	@FXML
+	private Label warningBox;
+
+	@FXML
+	private TextArea infoBox;
+	@FXML
+	private TextField portInput;
+	@FXML
+	private TextField motorSpeedInput;
+	@FXML
+	private TextField steeringMotorSpeedInput;
+	@FXML
+	private TextField motorAccelerationInput;
+	@FXML
+	private TextField maximumSteeringAngleInput;
+	@FXML
+	private TextField stopingAccelerationInput;
+	@FXML
+	private Slider motorSpeedSlider;
+	@FXML
+	private Slider steeringMotorSpeedSlider;
+	@FXML
+	private Slider motorAccelerationSlider;
+	@FXML
+	private Slider stopingAccelerationSlider;
+	@FXML
+	private Slider maximumSteeringAngleSlider;
+
+	@FXML
+	private ImageView motor1Status;
+	@FXML
+	private ImageView motor2Status;
+	@FXML
+	private ImageView steeringStatus;
+	@FXML
+	private ImageView warningStatus;
+
+	@FXML
+	private GridPane batteryPane;
+	@FXML
+	private GridPane anglePane;
+	@FXML
+	private GridPane speedPane;
+	@FXML
+	private GridPane chronoPane;
+
+	private String buttonPressedStyle = "-fx-background-color: \n" + "        #3c7fb1,\n"
+			+ "        linear-gradient(#61adc6, #56c4ff),\n"
+			+ "        linear-gradient(#6dc9ff 0%, #6caed1 49%, #20acfc 50%, #6eb2d8 100%);\n"
+			+ "    -fx-background-insets: 0,1,2;\n" + "    -fx-background-radius: 3,2,1;\n"
+			+ "    -fx-font-size: 14px;";
+
 	public static int motorSpeed;
 	public static int steeringMotorSpeed;
 	public static int motorAcceleration;
 	public static int maximumSteeringAngle;
 	public static int stopingAcceleration;
 	public static int valueChrono = 120;
-	
+
 	public static FloatProperty batteryLevel = new SimpleFloatProperty(0);
 	public static FloatProperty angle = new SimpleFloatProperty(0);
 	public static FloatProperty speed = new SimpleFloatProperty(0);
-	
+
 	private MainApp mainApp;
 	private Gauge angleGauge;
 	private Gauge batteryGauge;
 	private Gauge speedGauge;
 	static Gauge chronometer;
-	
+
 	private Time timeRemaining = new Time(new CountdownController());
-	
+
 	public static StringProperty message = new SimpleStringProperty("");
 
 	Boolean started = false;
 	Boolean startedSteering = false;
 	public static Boolean running = true;
-	
-	
+
 	public InterfxOverviewController() {
 	}
-	
+
 	// THREAD COMMUNICATION MOTEUR
-    public void commMotor_Thread() {
+	public void commMotor_Thread() {
 		Runnable task = new Runnable() {
 			public void run() {
 				try {
@@ -135,34 +167,36 @@ public class InterfxOverviewController {
 					motor2Status.setImage(new Image("file:ressources/icons/ok.png"));
 					steeringStatus.setImage(new Image("file:ressources/icons/ok.png"));
 					commMotor.run();
-					} catch (IOException e) {e.printStackTrace();} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		};
 		Thread backgroundThread = new Thread(task);
 		backgroundThread.setDaemon(true);
 		backgroundThread.start();
 	}
-    
-    // THREAD NIVEAU DE BATTERIE
-    public void battery_Thread() {
-    	Runnable task = new Runnable() {
+
+	// THREAD NIVEAU DE BATTERIE
+	public void battery_Thread() {
+		Runnable task = new Runnable() {
 			public void run() {
 				commMotor.getBatteryLevel();
 				FxTimer.runPeriodically(Duration.ofSeconds(30), () -> {
-				 commMotor.fifoQueue.add(99);
+					commMotor.fifoQueue.add(99);
 				});
 			}
 		};
 		Thread backgroundThread = new Thread(task);
 		backgroundThread.setDaemon(true);
 		backgroundThread.start();
-    }
-    
-    // THREAD PARAMETRES
-    public void params_Thread() {
-    	Runnable task = new Runnable() {
+	}
+
+	// THREAD PARAMETRES
+	public void params_Thread() {
+		Runnable task = new Runnable() {
 			public void run() {
 				FxTimer.runPeriodically(Duration.ofMillis(200), () -> {
 					commMotor.fifoQueue.add(98);
@@ -172,88 +206,87 @@ public class InterfxOverviewController {
 		Thread backgroundThread = new Thread(task);
 		backgroundThread.setDaemon(true);
 		backgroundThread.start();
-    }
-	
+	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@FXML
 	private void initialize() throws IOException, InterruptedException {
-		
+
 		setParameters.setDisable(true);
+		setPadParams.setDisable(true);
 		resetParameters.setDisable(true);
+		setRaceParams.setDisable(true);
 		warningStatus.setVisible(false);
 		warningBox.setVisible(false);
 		warningStatus.setImage(new Image("file:ressources/icons/warning-icon-hi.png"));
 		motor1Status.setImage(new Image("file:ressources/icons/ko.png"));
 		motor2Status.setImage(new Image("file:ressources/icons/ko.png"));
 		steeringStatus.setImage(new Image("file:ressources/icons/ko.png"));
-		
+
 		final ChangeListener batteryLevelListener = new ChangeListener() {
-		      @Override
-		      public void changed(ObservableValue observableValue, Object oldValue,
-		          Object newValue) {batteryGauge.setValue(batteryLevel.floatValue());}
-		    };
-		    
-		    batteryLevel.addListener(batteryLevelListener);
-		
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				batteryGauge.setValue(batteryLevel.floatValue());
+			}
+		};
+
+		batteryLevel.addListener(batteryLevelListener);
+
 		final ChangeListener angleListener = new ChangeListener() {
-		      @Override
-		      public void changed(ObservableValue observableValue, Object oldValue,
-		          Object newValue) {angleGauge.setValue(angle.floatValue());}
-		    };
-		    
-		    angle.addListener(angleListener);
-		
-	    final ChangeListener speedListener = new ChangeListener() {
-		      @Override
-		      public void changed(ObservableValue observableValue, Object oldValue,
-		          Object newValue) {speedGauge.setValue(speed.floatValue());}
-		    };
-		    
-		    speed.addListener(speedListener);
-		    
-	    final ChangeListener infoListener = new ChangeListener() {
-		      @Override
-		      public void changed(ObservableValue observableValue, Object oldValue,
-		          Object newValue) {
-			    	  if (infoBox.getText() != null) {
-			    		  String oldText = infoBox.getText();
-			    		  infoBox.setText((String) oldText + newValue);
-			    	  }
-		    	  }
-		    };
-		    
-		    message.addListener(infoListener);
-		
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				angleGauge.setValue(angle.floatValue());
+			}
+		};
+
+		angle.addListener(angleListener);
+
+		final ChangeListener speedListener = new ChangeListener() {
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				speedGauge.setValue(speed.floatValue());
+			}
+		};
+
+		speed.addListener(speedListener);
+
+		final ChangeListener infoListener = new ChangeListener() {
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				if (infoBox.getText() != null) {
+					String oldText = infoBox.getText();
+					infoBox.setText((String) oldText + newValue);
+				}
+			}
+		};
+
+		message.addListener(infoListener);
+
 		angleGauge = GaugeBuilder.create()
-                .skinType(SkinType.HORIZONTAL)
-                .prefSize(1000, 500)
-                .title("ANGLE")
-                .titleColor(Color.BLACK)
-                .maxValue(85)
-                .minValue(-85)
-                .value(0)
-                .animated(true)
-                .sectionsVisible(true)
-                .sections(new Section(40, 100, Color.ORANGERED), new Section(-100,-40, Color.ORANGERED))
-                .checkSectionsForValue(true)
-                .animationDuration(100)
-                .build();
-		
+				.skinType(SkinType.HORIZONTAL)
+				.prefSize(1000, 500).title("ANGLE")
+				.titleColor(Color.BLACK).maxValue(85)
+				.minValue(-85)
+				.value(0).animated(true)
+				.sectionsVisible(true)
+				.sections(new Section(40, 100, Color.ORANGERED), new Section(-100, -40, Color.ORANGERED))
+				.checkSectionsForValue(true)
+				.animationDuration(100)
+				.build();
+
 		batteryGauge = GaugeBuilder.create()
-                .skinType(SkinType.BATTERY)
-                .value(100)
+				.skinType(SkinType.BATTERY)
+				.value(100)
 				.prefSize(800, 300)
-                .gradientBarEnabled(true) // Gradient filled bar should be visible  
-                .gradientBarStops(new Stop(1.0, Color.GREEN), // Gradient for gradient bar  
-                                     new Stop(0.75, Color.YELLOWGREEN),  
-                                     new Stop(0.5, Color.YELLOW),  
-                                     new Stop(0.25, Color.DARKORANGE),  
-                                     new Stop(0.0, Color.ORANGERED))
-                .build();
-		
+				.gradientBarEnabled(true) // Gradient filled bar should be visible
+				.gradientBarStops(new Stop(1.0, Color.GREEN), // Gradient for gradient bar
+						new Stop(0.75, Color.YELLOWGREEN), new Stop(0.5, Color.YELLOW),
+						new Stop(0.25, Color.DARKORANGE), new Stop(0.0, Color.ORANGERED))
+				.build();
+
 		speedGauge = GaugeBuilder.create()
 				.skinType(SkinType.HORIZONTAL)
-				.prefSize(1000,500)
+				.prefSize(1000, 500)
 				.title("SPEED")
 				.titleColor(Color.BLACK)
 				.minValue(0)
@@ -264,7 +297,7 @@ public class InterfxOverviewController {
 				.sectionsVisible(true)
 				.sections(new Section(720, 800, Color.ORANGERED))
 				.build();
-		
+
 		chronometer = GaugeBuilder.create()
 				.skinType(SkinType.FLAT)
 				.title("CHRONO")
@@ -280,65 +313,70 @@ public class InterfxOverviewController {
 				.sections(new Section(0, 120, Color.LIMEGREEN))
 				.prefSize(1000, 500)
 				.build();
-		
+
 		batteryPane.setPadding(new Insets(0));
 		batteryPane.add(batteryGauge, 0, 0);
-		
+
 		anglePane.setPadding(new Insets(5));
 		anglePane.add(angleGauge, 0, 0);
-		
+
 		speedPane.setPadding(new Insets(5));
 		speedPane.add(speedGauge, 0, 0);
-		
+
 		chronoPane.setPadding(new Insets(5));
 		chronoPane.add(chronometer, 0, 0);
-		
+
 		commMotor_Thread();
 		battery_Thread();
 		params_Thread();
 		configureSliders();
 	}
-	
+
 	@FXML
 	private void chrono_start() throws InterruptedException {
 		Thread.sleep(1000);
 		timeRemaining.reset();
-		if (valueChrono == 120) timeRemaining.addMinutes(2); else timeRemaining.addMinutes(6);
+		if (valueChrono == 120)
+			timeRemaining.addMinutes(2);
+		else
+			timeRemaining.addMinutes(6);
 		Countdown.startCountdown(timeRemaining);
-    }
-	
+	}
+
 	@FXML
 	private void chrono_stop() {
 		Countdown.stopCountdown();
 	}
-	
+
 	@FXML
 	private void chrono_reset() {
 		chronometer.setMaxValue(valueChrono);
 		chronometer.addSection(new Section(0, valueChrono, Color.LIMEGREEN));
 		chronometer.setValue(valueChrono);
 	}
-	
+
 	@FXML
 	private void chrono_set120() {
 		valueChrono = 120;
 		chrono_reset();
 	}
-	
+
 	@FXML
 	private void chrono_set360() {
 		valueChrono = 360;
 		chrono_reset();
 	}
-	
+
 	@FXML
 	private void setParameters() throws InterruptedException, IOException {
 		message.set("Parameters have been set\n");
 		setAllEvents();
 		setParameters.setDisable(true);
 		resetParameters.setDisable(false);
-		
-		if (portInput.getText().contentEquals("")){
+		setRaceParams.setDisable(false);
+		setPadParams.setDisable(false);
+
+		if (portInput.getText().contentEquals("")) {
 			Serveur ts = new Serveur(2017);
 			portInput.setText("2017");
 			ts.open();
@@ -346,21 +384,22 @@ public class InterfxOverviewController {
 			Serveur ts = new Serveur(Integer.parseInt(portInput.getText()));
 			ts.open();
 		}
-		
+
 		portInput.setDisable(true);
-		message.set("Connection is open on port "+portInput.getText());
+		message.set("Connection is open on port " + portInput.getText());
 		message.set("\nReady...\n");
 	}
-	
+
 	private void configureSliders() {
 		stopingAccelerationSlider.setSnapToTicks(true);
 		maximumSteeringAngleSlider.setSnapToTicks(true);
 		motorAccelerationSlider.setSnapToTicks(true);
 		motorSpeedSlider.setSnapToTicks(true);
 		steeringMotorSpeedSlider.setSnapToTicks(true);
-		
+
 		stopingAccelerationInput.textProperty().addListener((observable, oldValue, newValue) -> {
-			if(!newValue.contentEquals("")) stopingAccelerationSlider.setValue(Double.parseDouble(newValue));
+			if (!newValue.contentEquals(""))
+				stopingAccelerationSlider.setValue(Double.parseDouble(newValue));
 		});
 		stopingAccelerationSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
 			stopingAccelerationInput.setText(Integer.toString(newValue.intValue()));
@@ -368,9 +407,10 @@ public class InterfxOverviewController {
 			warningStatus.setVisible(true);
 			resetParameters.setDisable(false);
 		});
-		
+
 		motorAccelerationInput.textProperty().addListener((observable, oldValue, newValue) -> {
-			if(!newValue.contentEquals("")) motorAccelerationSlider.setValue(Double.parseDouble(newValue));
+			if (!newValue.contentEquals(""))
+				motorAccelerationSlider.setValue(Double.parseDouble(newValue));
 		});
 		motorAccelerationSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
 			motorAccelerationInput.setText(Integer.toString(newValue.intValue()));
@@ -378,9 +418,10 @@ public class InterfxOverviewController {
 			warningStatus.setVisible(true);
 			resetParameters.setDisable(false);
 		});
-		
+
 		maximumSteeringAngleInput.textProperty().addListener((observable, oldValue, newValue) -> {
-			if(!newValue.contentEquals("")) maximumSteeringAngleSlider.setValue(Double.parseDouble(newValue));
+			if (!newValue.contentEquals(""))
+				maximumSteeringAngleSlider.setValue(Double.parseDouble(newValue));
 		});
 		maximumSteeringAngleSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
 			maximumSteeringAngleInput.setText(Integer.toString(newValue.intValue()));
@@ -388,9 +429,10 @@ public class InterfxOverviewController {
 			warningStatus.setVisible(true);
 			resetParameters.setDisable(false);
 		});
-		
+
 		motorSpeedInput.textProperty().addListener((observable, oldValue, newValue) -> {
-			if(!newValue.contentEquals("")) motorSpeedSlider.setValue(Double.parseDouble(newValue));
+			if (!newValue.contentEquals(""))
+				motorSpeedSlider.setValue(Double.parseDouble(newValue));
 		});
 		motorSpeedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
 			motorSpeedInput.setText(Integer.toString(newValue.intValue()));
@@ -398,9 +440,10 @@ public class InterfxOverviewController {
 			warningStatus.setVisible(true);
 			resetParameters.setDisable(false);
 		});
-		
+
 		steeringMotorSpeedInput.textProperty().addListener((observable, oldValue, newValue) -> {
-			if(!newValue.contentEquals("")) steeringMotorSpeedSlider.setValue(Double.parseDouble(newValue));
+			if (!newValue.contentEquals(""))
+				steeringMotorSpeedSlider.setValue(Double.parseDouble(newValue));
 		});
 		steeringMotorSpeedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
 			steeringMotorSpeedInput.setText(Integer.toString(newValue.intValue()));
@@ -409,95 +452,121 @@ public class InterfxOverviewController {
 			resetParameters.setDisable(false);
 		});
 	}
-	
+
+	@FXML
+	private void setRaceParams() throws RemoteException {
+		steeringMotorSpeedInput.setText("300");
+		motorAccelerationInput.setText("1400");
+		motorSpeedInput.setText("720");
+		getParameters();
+	}
+
+	@FXML
+	private void setPadParams() throws RemoteException {
+		steeringMotorSpeedInput.setText("60");
+		motorAccelerationInput.setText("300");
+		motorSpeedInput.setText("200");
+		getParameters();
+	}
+
 	@FXML
 	private void getParameters() throws RemoteException {
-		
-		if(motorSpeedInput.getText().contentEquals("")) {
+
+		if (motorSpeedInput.getText().contentEquals("")) {
 			motorSpeed = 720;
 			motorSpeedInput.setText("720");
-		} else motorSpeed = Integer.parseInt(motorSpeedInput.getText());
-		
-		if(steeringMotorSpeedInput.getText().contentEquals("")) {
+		} else
+			motorSpeed = Integer.parseInt(motorSpeedInput.getText());
+
+		if (steeringMotorSpeedInput.getText().contentEquals("")) {
 			steeringMotorSpeed = 60;
 			steeringMotorSpeedInput.setText("60");
-		} else steeringMotorSpeed = Integer.parseInt(steeringMotorSpeedInput.getText());
-		
-		if(motorAccelerationInput.getText().contentEquals("")) {
+		} else
+			steeringMotorSpeed = Integer.parseInt(steeringMotorSpeedInput.getText());
+
+		if (motorAccelerationInput.getText().contentEquals("")) {
 			motorAcceleration = 600;
 			motorAccelerationInput.setText("600");
-		} else motorAcceleration = Integer.parseInt(motorAccelerationInput.getText());
-		
-		if(maximumSteeringAngleInput.getText().contentEquals("")) {
+		} else
+			motorAcceleration = Integer.parseInt(motorAccelerationInput.getText());
+
+		if (maximumSteeringAngleInput.getText().contentEquals("")) {
 			maximumSteeringAngle = 40;
 			maximumSteeringAngleInput.setText("40");
-		} else maximumSteeringAngle = Integer.parseInt(maximumSteeringAngleInput.getText());
-		
-		if(stopingAccelerationInput.getText().contentEquals("")) {
+		} else
+			maximumSteeringAngle = Integer.parseInt(maximumSteeringAngleInput.getText());
+
+		if (stopingAccelerationInput.getText().contentEquals("")) {
 			stopingAcceleration = 200;
 			stopingAccelerationInput.setText("200");
-		} else stopingAcceleration = Integer.parseInt(stopingAccelerationInput.getText());
-		
+		} else
+			stopingAcceleration = Integer.parseInt(stopingAccelerationInput.getText());
+
 		MotorControl_v2.resetParameters();
-		
+
 		warningBox.setVisible(false);
 		warningStatus.setVisible(false);
 		angleGauge.clearSections();
-		angleGauge.setSections(new Section(maximumSteeringAngle, 100, Color.ORANGERED), new Section(-100,-maximumSteeringAngle, Color.ORANGERED));
+		angleGauge.setSections(new Section(maximumSteeringAngle, 100, Color.ORANGERED),
+				new Section(-100, -maximumSteeringAngle, Color.ORANGERED));
+		speedGauge.clearSections();
+		speedGauge.setSections(new Section(motorSpeed, 800, Color.ORANGERED));
 		resetParameters.setDisable(true);
 	}
-	
+
 	private void setAllEvents() throws RemoteException, InterruptedException {
 		Scene scene = mainApp.getPrimaryStage().getScene();
-		
+
 		getParameters();
-		
+
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
-				
+
 				if (event.getCode() == KeyCode.ENTER) {
 					try {
-						InputStream ips=new FileInputStream("AutoRun.txt");
-						InputStreamReader ipsr=new InputStreamReader(ips);
-						BufferedReader br=new BufferedReader(ipsr);
+						InputStream ips = new FileInputStream("AutoRun.txt");
+						InputStreamReader ipsr = new InputStreamReader(ips);
+						BufferedReader br = new BufferedReader(ipsr);
 						String ligne;
-						while ((ligne=br.readLine())!=null){
+						while ((ligne = br.readLine()) != null) {
 							if (!ligne.contains("#")) {
 								commMotor.fifoQueue.add(Integer.parseInt(ligne));
-								System.out.println("J'ajoute "+ligne);
+								System.out.println("J'ajoute " + ligne);
 								Thread.sleep(10);
 							}
 						}
-						br.close(); 
-					} catch (IOException | InterruptedException e) {e.printStackTrace();}
-					
+						br.close();
+					} catch (IOException | InterruptedException e) {
+						e.printStackTrace();
+					}
+
 				}
-				
+
 				if (event.getCode() == KeyCode.NUMPAD4 && !startedSteering) {
 					commMotor.fifoQueue.add(4);
 					startedSteering = true;
 					boutonGauche.setStyle(buttonPressedStyle);
 				}
-				
+
 				if (event.getCode() == KeyCode.NUMPAD6 && !startedSteering) {
 					commMotor.fifoQueue.add(6);
 					startedSteering = true;
 					boutonDroite.setStyle(buttonPressedStyle);
 				}
-				
+
 				if (event.getCode() == KeyCode.NUMPAD8 && !started) {
 					commMotor.fifoQueue.add(8);
 					started = true;
 					boutonAvance.setStyle(buttonPressedStyle);
 				}
-				
+
 				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
 					commMotor.fifoQueue.add(5);
 					started = true;
 					boutonRecule.setStyle(buttonPressedStyle);
 				}
-				
+
 				if (event.getCode() == KeyCode.NUMPAD1) {
 					try {
 						MotorControl_v2.CalibrateLeft();
@@ -514,7 +583,7 @@ public class InterfxOverviewController {
 				}
 			}
 		});
-		
+
 		scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
 			@Override
 			public void handle(KeyEvent event) {
@@ -523,19 +592,19 @@ public class InterfxOverviewController {
 					boutonAvance.setStyle("");
 					commMotor.fifoQueue.add(-1);
 				}
-				
+
 				if (event.getCode() == KeyCode.NUMPAD5 && started) {
 					started = false;
 					boutonRecule.setStyle("");
 					commMotor.fifoQueue.add(-1);
 				}
-				
+
 				if ((event.getCode() == KeyCode.NUMPAD6) && startedSteering) {
 					startedSteering = false;
 					boutonDroite.setStyle("");
 					commMotor.fifoQueue.add(0);
 				}
-				
+
 				if ((event.getCode() == KeyCode.NUMPAD4) && startedSteering) {
 					startedSteering = false;
 					boutonGauche.setStyle("");
@@ -544,8 +613,8 @@ public class InterfxOverviewController {
 			}
 		});
 	}
-	
+
 	public void setMainApp(MainApp mainApp) {
-        this.mainApp = mainApp;
+		this.mainApp = mainApp;
 	}
 }

@@ -125,7 +125,7 @@
                </rowConstraints>
             </GridPane>
             <Slider fx:id="stopingAccelerationSlider" layoutX="426.0" layoutY="81.0" majorTickUnit="300.0" max="800.0" minorTickCount="2" showTickMarks="true" />
-            <Slider fx:id="motorAccelerationSlider" layoutX="426.0" layoutY="119.0" majorTickUnit="300.0" max="800.0" minorTickCount="2" showTickMarks="true" />
+            <Slider fx:id="motorAccelerationSlider" layoutX="426.0" layoutY="119.0" majorTickUnit="300.0" max="1400.0" minorTickCount="2" showTickMarks="true" />
             <Slider fx:id="motorSpeedSlider" layoutX="427.0" layoutY="197.0" majorTickUnit="300.0" max="720.0" showTickMarks="true" />
             <Slider fx:id="maximumSteeringAngleSlider" layoutX="427.0" layoutY="158.0" majorTickUnit="10.0" max="60.0" minorTickCount="1" showTickMarks="true" />
             <Slider fx:id="steeringMotorSpeedSlider" layoutX="427.0" layoutY="234.0" majorTickUnit="100.0" max="300.0" minorTickCount="1" showTickMarks="true" />
@@ -154,7 +154,17 @@
             <Button fx:id="chrono_reset" layoutX="645.0" layoutY="577.0" mnemonicParsing="false" onAction="#chrono_reset" prefWidth="70.0" text="RESET" />
             <Button fx:id="chrono_set120" layoutX="495.0" layoutY="607.0" mnemonicParsing="false" onAction="#chrono_set120" prefWidth="107.0" text="SET 120s" />
             <Button fx:id="chrono_set360" layoutX="608.0" layoutY="607.0" mnemonicParsing="false" onAction="#chrono_set360" prefWidth="107.0" text="SET 360s" />
-            <TextArea fx:id="infoBox" layoutX="11.0" layoutY="117.0" prefHeight="196.0" prefWidth="353.0" />
+            <TextArea fx:id="infoBox" layoutX="11.0" layoutY="139.0" prefHeight="167.0" prefWidth="353.0" />
+            <Button fx:id="setRaceParams" layoutX="11.0" layoutY="104.0" mnemonicParsing="false" onAction="#setRaceParams" text="Set Race Parameters">
+               <font>
+                  <Font size="12.0" />
+               </font>
+            </Button>
+            <Button fx:id="setPadParams" layoutX="162.0" layoutY="104.0" mnemonicParsing="false" onAction="#setPadParams" text="Set Pad Parameters">
+               <font>
+                  <Font size="12.0" />
+               </font>
+            </Button>
          </children>
       </AnchorPane>
    </children>

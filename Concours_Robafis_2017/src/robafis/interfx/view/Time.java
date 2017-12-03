@@ -23,54 +23,54 @@ import javafx.beans.property.SimpleIntegerProperty;
  */
 public class Time {
 
-    private boolean hasTimeLeft;
-    private SimpleIntegerProperty seconds;
+	private boolean hasTimeLeft;
+	private SimpleIntegerProperty seconds;
 
-    public Time(CountdownController countdownController) {
-        seconds = new SimpleIntegerProperty(0);
-        seconds.addListener(countdownController);
-        hasTimeLeft = true;
-    }
+	public Time(CountdownController countdownController) {
+		seconds = new SimpleIntegerProperty(0);
+		seconds.addListener(countdownController);
+		hasTimeLeft = true;
+	}
 
-    public void addMinutes(int i) {
-        seconds.set(seconds.get() + (i * 60));
-        if (seconds.get() > 0) {
-            hasTimeLeft = true;
-        }
-    }
+	public void addMinutes(int i) {
+		seconds.set(seconds.get() + (i * 60));
+		if (seconds.get() > 0) {
+			hasTimeLeft = true;
+		}
+	}
 
-    public void subMinutes(int i) {
-        seconds.set(seconds.get() - (i * 60));
-        if (seconds.get() <= 0) {
-            hasTimeLeft = false;
-        }
-    }
+	public void subMinutes(int i) {
+		seconds.set(seconds.get() - (i * 60));
+		if (seconds.get() <= 0) {
+			hasTimeLeft = false;
+		}
+	}
 
-    public boolean hasTimeLeft() {
-        return hasTimeLeft;
-    }
+	public boolean hasTimeLeft() {
+		return hasTimeLeft;
+	}
 
-    @Override
-    public String toString() {
-        //hh:MM:ss
-        String seconds = String.valueOf(this.seconds.get() % 60);
-        String minutes = String.valueOf(this.seconds.get() / 60 % 60);
-        String hours = String.valueOf(this.seconds.get() / 60 / 60);
-        seconds = seconds.length() == 1 ? "0" + seconds : seconds;
-        minutes = minutes.length() == 1 ? "0" + minutes : minutes;
-        hours = hours.length() == 1 ? "0" + hours : hours;
-        return hours + ":" + minutes + ":" + seconds;
-    }
+	@Override
+	public String toString() {
+		// hh:MM:ss
+		String seconds = String.valueOf(this.seconds.get() % 60);
+		String minutes = String.valueOf(this.seconds.get() / 60 % 60);
+		String hours = String.valueOf(this.seconds.get() / 60 / 60);
+		seconds = seconds.length() == 1 ? "0" + seconds : seconds;
+		minutes = minutes.length() == 1 ? "0" + minutes : minutes;
+		hours = hours.length() == 1 ? "0" + hours : hours;
+		return hours + ":" + minutes + ":" + seconds;
+	}
 
-    public void reset() {
-        seconds.set(0);
-        hasTimeLeft = false;
-    }
+	public void reset() {
+		seconds.set(0);
+		hasTimeLeft = false;
+	}
 
-    public void subSeconds(int i) {
-        seconds.set(seconds.get() - i);
-        if (seconds.get() <= 0) {
-            hasTimeLeft = false;
-        }
-    }
+	public void subSeconds(int i) {
+		seconds.set(seconds.get() - i);
+		if (seconds.get() <= 0) {
+			hasTimeLeft = false;
+		}
+	}
 }
