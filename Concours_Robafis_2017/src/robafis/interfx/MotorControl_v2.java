@@ -8,15 +8,20 @@ import robafis.interfx.view.InterfxOverviewController;
 
 public class MotorControl_v2 {
 
+	public static float maxSteeringAngle;
+	public static float ratio;
 	static RMIRegulatedMotor leftMotor = commMotor.ev3.createRegulatedMotor("B", 'L');
 	static RMIRegulatedMotor rightMotor = commMotor.ev3.createRegulatedMotor("C", 'L');
 	static RMIRegulatedMotor steeringMotor = commMotor.ev3.createRegulatedMotor("D", 'M');
 
 	public static void resetParameters() throws RemoteException {
 		steeringMotor.setSpeed(InterfxOverviewController.steeringMotorSpeed);
-
+		
 		rightMotor.setSpeed(InterfxOverviewController.motorSpeed);
 		leftMotor.setSpeed(InterfxOverviewController.motorSpeed);
+		maxSteeringAngle = InterfxOverviewController.maximumSteeringAngle;
+		
+		ratio = (float) maxSteeringAngle / (float) 60.0;
 	}
 
 	public static void autoRun() throws RemoteException {

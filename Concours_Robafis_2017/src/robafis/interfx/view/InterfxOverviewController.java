@@ -44,84 +44,71 @@ import robafis.interfx.view.Time;
 
 public class InterfxOverviewController {
 
-	@FXML
-	private Button setParameters;
-	@FXML
-	private Button boutonAvance;
-	@FXML
-	private Button boutonRecule;
-	@FXML
-	private Button boutonGauche;
-	@FXML
-	private Button boutonDroite;
-	@FXML
-	private Button resetParameters;
-	@FXML
-	private Button chrono_start;
-	@FXML
-	private Button chrono_stop;
-	@FXML
-	private Button chrono_reset;
-	@FXML
-	private Button chrono_set120;
-	@FXML
-	private Button chrono_set360;
-	@FXML
-	private Button setRaceParams;
-	@FXML
-	private Button setPadParams;
+	@FXML private Button setParameters;
+	@FXML private Button boutonAvance;
+	@FXML private Button boutonRecule;
+	@FXML private Button boutonGauche;
+	@FXML private Button boutonDroite;
+	@FXML private Button resetParameters;
+	@FXML private Button chrono_start;
+	@FXML private Button chrono_stop;
+	@FXML private Button chrono_reset;
+	@FXML private Button chrono_set120;
+	@FXML private Button chrono_set360;
+	@FXML private Button setRaceParams;
+	@FXML private Button setPadParams;
 
-	@FXML
-	private Label warningBox;
+	@FXML private Label warningBox;
 
-	@FXML
-	private TextArea infoBox;
-	@FXML
-	private TextField portInput;
-	@FXML
-	private TextField motorSpeedInput;
-	@FXML
-	private TextField steeringMotorSpeedInput;
-	@FXML
-	private TextField motorAccelerationInput;
-	@FXML
-	private TextField maximumSteeringAngleInput;
-	@FXML
-	private TextField stopingAccelerationInput;
-	@FXML
-	private Slider motorSpeedSlider;
-	@FXML
-	private Slider steeringMotorSpeedSlider;
-	@FXML
-	private Slider motorAccelerationSlider;
-	@FXML
-	private Slider stopingAccelerationSlider;
-	@FXML
-	private Slider maximumSteeringAngleSlider;
+	@FXML private TextArea infoBox;
+	@FXML private TextField portInput;
+	@FXML private TextField motorSpeedInput;
+	@FXML private TextField steeringMotorSpeedInput;
+	@FXML private TextField motorAccelerationInput;
+	@FXML private TextField maximumSteeringAngleInput;
+	@FXML private TextField stopingAccelerationInput;
+	
+	@FXML private Slider motorSpeedSlider;
+	@FXML private Slider steeringMotorSpeedSlider;
+	@FXML private Slider motorAccelerationSlider;
+	@FXML private Slider stopingAccelerationSlider;
+	@FXML private Slider maximumSteeringAngleSlider;
 
-	@FXML
-	private ImageView motor1Status;
-	@FXML
-	private ImageView motor2Status;
-	@FXML
-	private ImageView steeringStatus;
-	@FXML
-	private ImageView warningStatus;
+	@FXML private ImageView motor1Status;
+	@FXML private ImageView motor2Status;
+	@FXML private ImageView steeringStatus;
+	@FXML private ImageView warningStatus;
 
-	@FXML
-	private GridPane batteryPane;
-	@FXML
-	private GridPane anglePane;
-	@FXML
-	private GridPane speedPane;
-	@FXML
-	private GridPane chronoPane;
+	@FXML private GridPane batteryPane;
+	@FXML private GridPane anglePane;
+	@FXML private GridPane speedPane;
+	@FXML private GridPane chronoPane;
 
 	private String buttonPressedStyle = "-fx-background-color: \n" + "        #3c7fb1,\n"
 			+ "        linear-gradient(#61adc6, #56c4ff),\n"
 			+ "        linear-gradient(#6dc9ff 0%, #6caed1 49%, #20acfc 50%, #6eb2d8 100%);\n"
 			+ "    -fx-background-insets: 0,1,2;\n" + "    -fx-background-radius: 3,2,1;\n"
 			+ "    -fx-font-size: 14px;";
+	
+	private String chronoButtonStyle = "    -fx-background-color: \n" + 
+			"        #000000,\n" + 
+			"        linear-gradient(#7ebcea, #2f4b8f),\n" + 
+			"        linear-gradient(#426ab7, #263e75),\n" + 
+			"        linear-gradient(#395cab, #223768);\n" + 
+			"    -fx-background-insets: 0,1,2,3;\n" + 
+			"    -fx-background-radius: 3,2,2,2;\n" + 
+			"    -fx-padding: 12 30 12 30;\n" + 
+			"    -fx-text-fill: white;\n" + 
+			"    -fx-font-size: 12px;";
+	
+	private String paramsButtonStyle = "-fx-background-color: \n" + 
+			"        linear-gradient(#f2f2f2, #d6d6d6),\n" + 
+			"        linear-gradient(#fcfcfc 0%, #d9d9d9 20%, #d6d6d6 100%),\n" + 
+			"        linear-gradient(#dddddd 0%, #f6f6f6 50%);\n" + 
+			"    -fx-background-radius: 8,7,6;\n" + 
+			"    -fx-background-insets: 0,1,2;\n" + 
+			"    -fx-text-fill: black;\n" + 
+			"    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );";
 
 	public static int motorSpeed;
 	public static int steeringMotorSpeed;
@@ -212,16 +199,26 @@ public class InterfxOverviewController {
 	@FXML
 	private void initialize() throws IOException, InterruptedException {
 
+		warningBox.setText("Parameters have been\nmodified, please reset");
+		warningBox.setTextFill(Color.RED);
 		setParameters.setDisable(true);
 		setPadParams.setDisable(true);
 		resetParameters.setDisable(true);
 		setRaceParams.setDisable(true);
 		warningStatus.setVisible(false);
 		warningBox.setVisible(false);
+		
+		chrono_reset.setStyle(chronoButtonStyle);
+		chrono_start.setStyle(chronoButtonStyle);
+		chrono_stop.setStyle(chronoButtonStyle);
+		chrono_set120.setStyle(chronoButtonStyle);
+		chrono_set360.setStyle(chronoButtonStyle);
+		
 		warningStatus.setImage(new Image("file:ressources/icons/warning-icon-hi.png"));
 		motor1Status.setImage(new Image("file:ressources/icons/ko.png"));
 		motor2Status.setImage(new Image("file:ressources/icons/ko.png"));
 		steeringStatus.setImage(new Image("file:ressources/icons/ko.png"));
+		
 
 		final ChangeListener batteryLevelListener = new ChangeListener() {
 			@Override
@@ -559,12 +556,14 @@ public class InterfxOverviewController {
 					commMotor.fifoQueue.add(8);
 					started = true;
 					boutonAvance.setStyle(buttonPressedStyle);
+					speed.set(200);
 				}
 
 				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
 					commMotor.fifoQueue.add(5);
 					started = true;
 					boutonRecule.setStyle(buttonPressedStyle);
+					speed.set(200);
 				}
 
 				if (event.getCode() == KeyCode.NUMPAD1) {
@@ -591,12 +590,14 @@ public class InterfxOverviewController {
 					started = false;
 					boutonAvance.setStyle("");
 					commMotor.fifoQueue.add(-1);
+					speed.set(0);
 				}
 
 				if (event.getCode() == KeyCode.NUMPAD5 && started) {
 					started = false;
 					boutonRecule.setStyle("");
 					commMotor.fifoQueue.add(-1);
+					speed.set(0);
 				}
 
 				if ((event.getCode() == KeyCode.NUMPAD6) && startedSteering) {
