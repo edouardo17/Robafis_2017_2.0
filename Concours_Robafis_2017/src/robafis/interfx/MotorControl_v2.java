@@ -2,7 +2,10 @@ package robafis.interfx;
 
 import java.rmi.RemoteException;
 
+import lejos.hardware.port.Port;
+import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.remote.ev3.RMIRegulatedMotor;
+import lejos.robotics.SampleProvider;
 import lejos.utility.Delay;
 import robafis.interfx.view.InterfxOverviewController;
 
@@ -10,10 +13,26 @@ public class MotorControl_v2 {
 
 	public static float maxSteeringAngle;
 	public static float ratio;
+	
 	static RMIRegulatedMotor leftMotor = commMotor.ev3.createRegulatedMotor("B", 'L');
 	static RMIRegulatedMotor rightMotor = commMotor.ev3.createRegulatedMotor("C", 'L');
 	static RMIRegulatedMotor steeringMotor = commMotor.ev3.createRegulatedMotor("D", 'M');
-
+	
+	static Port leftSensorPort = commMotor.ev3.getPort("S1");            
+	public static EV3UltrasonicSensor lSensor = new EV3UltrasonicSensor(leftSensorPort);
+	public static SampleProvider leftDistance = lSensor.getMode("Distance");
+	public static float[] leftDistanceSample = new float[leftDistance.sampleSize()];
+	
+	static Port centerSensorPort = commMotor.ev3.getPort("S2");            
+	public static EV3UltrasonicSensor cSensor = new EV3UltrasonicSensor(centerSensorPort);
+	public static SampleProvider centerDistance = cSensor.getMode("Distance");
+	public static float[] centerDistanceSample = new float[leftDistance.sampleSize()];
+	
+	static Port rightSensorPort = commMotor.ev3.getPort("S4");            
+	public static EV3UltrasonicSensor rSensor = new EV3UltrasonicSensor(rightSensorPort);
+	public static SampleProvider rightDistance = rSensor.getMode("Distance");
+	public static float[] rightDistanceSample = new float[leftDistance.sampleSize()];
+	
 	public static void resetParameters() throws RemoteException {
 		steeringMotor.setSpeed(InterfxOverviewController.steeringMotorSpeed);
 		
@@ -77,6 +96,9 @@ public class MotorControl_v2 {
 		leftMotor.close();
 		rightMotor.close();
 		steeringMotor.close();
+		lSensor.close();
+		cSensor.close();
+		rSensor.close();
 	}
 
 	public static void CalibrateLeft() throws RemoteException {

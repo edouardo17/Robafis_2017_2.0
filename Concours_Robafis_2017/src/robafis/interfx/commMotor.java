@@ -16,7 +16,6 @@ public class commMotor {
 	public static float angle = 0;
 	public static float speed = 0;
 	static int instr;
-//	static float maxSteeringAngle = (float) 40.0;
 	public static Boolean startedSteering = false;
 	static int localAngle;
 
@@ -35,6 +34,7 @@ public class commMotor {
 				if (instr == -1) {MotorControl_v2.MotorStop();}
 				if (instr == 0) {MotorControl_v2.steeringMotor.rotateTo(0, true);}
 				if (instr == 9) {MotorControl_v2.autoRun();}
+				if (instr == 97) getRadar();
 				if (instr == 98) getParams();
 				if (instr == 99) getBatteryLevel();
 				if (instr >= -160 && instr < -100) {MotorControl_v2.steeringMotor.rotateTo(Math.round(-((instr + 100) * MotorControl_v2.ratio)), true); startedSteering = true;}
@@ -53,6 +53,15 @@ public class commMotor {
 	public static void connectToEV3() {
 		ev3 = (RemoteEV3) BrickFinder.getDefault();
 	}
+	
+	public static void getRadar() {
+		MotorControl_v2.leftDistance.fetchSample(MotorControl_v2.leftDistanceSample, 0);
+		MotorControl_v2.centerDistance.fetchSample(MotorControl_v2.centerDistanceSample, 0);
+		MotorControl_v2.rightDistance.fetchSample(MotorControl_v2.rightDistanceSample, 0);
+		InterfxOverviewController.lSensor.set(MotorControl_v2.leftDistanceSample[0]);
+		InterfxOverviewController.cSensor.set(MotorControl_v2.centerDistanceSample[0]);
+		InterfxOverviewController.rSensor.set(MotorControl_v2.rightDistanceSample[0]);
+	}
 
 	public static void getBatteryLevel() {
 		float voltage = Battery.getVoltage();
@@ -64,8 +73,8 @@ public class commMotor {
 
 	private static void getParams() throws RemoteException {
 		angle = MotorControl_v2.steeringMotor.getTachoCount();
-
 		InterfxOverviewController.angle.set(-angle);
-
 	}
+	
+	
 }

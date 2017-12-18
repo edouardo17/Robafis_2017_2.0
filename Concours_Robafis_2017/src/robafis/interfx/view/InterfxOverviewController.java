@@ -100,15 +100,6 @@ public class InterfxOverviewController {
 			"    -fx-padding: 12 30 12 30;\n" + 
 			"    -fx-text-fill: white;\n" + 
 			"    -fx-font-size: 12px;";
-	
-	private String paramsButtonStyle = "-fx-background-color: \n" + 
-			"        linear-gradient(#f2f2f2, #d6d6d6),\n" + 
-			"        linear-gradient(#fcfcfc 0%, #d9d9d9 20%, #d6d6d6 100%),\n" + 
-			"        linear-gradient(#dddddd 0%, #f6f6f6 50%);\n" + 
-			"    -fx-background-radius: 8,7,6;\n" + 
-			"    -fx-background-insets: 0,1,2;\n" + 
-			"    -fx-text-fill: black;\n" + 
-			"    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );";
 
 	public static int motorSpeed;
 	public static int steeringMotorSpeed;
@@ -120,6 +111,10 @@ public class InterfxOverviewController {
 	public static FloatProperty batteryLevel = new SimpleFloatProperty(0);
 	public static FloatProperty angle = new SimpleFloatProperty(0);
 	public static FloatProperty speed = new SimpleFloatProperty(0);
+	public static FloatProperty lSensor = new SimpleFloatProperty(0);
+	public static FloatProperty cSensor = new SimpleFloatProperty(0);
+	public static FloatProperty rSensor = new SimpleFloatProperty(0);
+	
 
 	private MainApp mainApp;
 	private Gauge angleGauge;
@@ -159,6 +154,20 @@ public class InterfxOverviewController {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+			}
+		};
+		Thread backgroundThread = new Thread(task);
+		backgroundThread.setDaemon(true);
+		backgroundThread.start();
+	}
+	
+	// THREAD RADAR
+	public void radar_Thread() {
+		Runnable task = new Runnable() {
+			public void run() {
+				FxTimer.runPeriodically(Duration.ofMillis(1000), () -> {
+					commMotor.fifoQueue.add(97);
+				});
 			}
 		};
 		Thread backgroundThread = new Thread(task);
@@ -258,6 +267,33 @@ public class InterfxOverviewController {
 		};
 
 		message.addListener(infoListener);
+		
+		final ChangeListener leftSensorListener = new ChangeListener() {
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				System.out.println(newValue);
+			}
+		};
+
+		lSensor.addListener(leftSensorListener);
+		
+		final ChangeListener centerSensorListener = new ChangeListener() {
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				System.out.println(newValue);
+			}
+		};
+
+		cSensor.addListener(centerSensorListener);
+		
+		final ChangeListener rightSensorListener = new ChangeListener() {
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				System.out.println(newValue);
+			}
+		};
+
+		rSensor.addListener(rightSensorListener);
 
 		angleGauge = GaugeBuilder.create()
 				.skinType(SkinType.HORIZONTAL)
@@ -326,6 +362,7 @@ public class InterfxOverviewController {
 		commMotor_Thread();
 		battery_Thread();
 		params_Thread();
+		radar_Thread();
 		configureSliders();
 	}
 
