@@ -168,6 +168,45 @@
                   <Font name="System Bold" size="12.0" />
                </font>
             </Button>
+            <ImageView fx:id="leftRadar" fitHeight="181.0" fitWidth="220.0" layoutX="194.0" layoutY="230.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="centerRadar" fitHeight="181.0" fitWidth="264.0" layoutX="337.0" layoutY="189.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="rightRadar" fitHeight="181.0" fitWidth="220.0" layoutX="527.0" layoutY="230.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="reverseRadar" fitHeight="181.0" fitWidth="264.0" layoutX="337.0" layoutY="522.0" pickOnBounds="true" preserveRatio="true" rotate="180.0" />
+            <ImageView fitHeight="220.0" fitWidth="184.0" layoutX="415.0" layoutY="333.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../../../../ressources/sportGT.png" />
+               </image>
+            </ImageView>
+            <Button fx:id="obstacleAvoidButton" layoutX="232.0" layoutY="503.0" mnemonicParsing="false" onAction="#setObstacleAvoid" prefHeight="30.0" prefWidth="88.0" style="-fx-background-color: transparent;">
+               <graphic>
+                  <ImageView fx:id="obstacleAvoidButtonImage" fitHeight="30.0" fitWidth="88.0" pickOnBounds="true" preserveRatio="true" />
+               </graphic>
+            </Button>
+            <Label fx:id="obstacleAvoidLabel" layoutX="22.0" layoutY="510.0" text="Obstacle Avoidance">
+               <font>
+                  <Font size="21.0" />
+               </font>
+            </Label>
+            <Label fx:id="radarOnOffLabel" layoutX="22.0" layoutY="478.0" text="Radar">
+               <font>
+                  <Font size="21.0" />
+               </font>
+            </Label>
+            <Button fx:id="radarOnOffButton" layoutX="232.0" layoutY="471.0" mnemonicParsing="false" onAction="#setRadarOnOff" prefHeight="30.0" prefWidth="88.0" style="-fx-background-color: transparent;">
+               <graphic>
+                  <ImageView fx:id="radarOnOffButtonImage" fitHeight="30.0" fitWidth="88.0" pickOnBounds="true" preserveRatio="true" />
+               </graphic>
+            </Button>
+            <ImageView fx:id="emerBrakingStatus" fitHeight="60.0" fitWidth="60.0" layoutX="637.0" layoutY="450.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../../../../ressources/icons/warning-icon-hi.png" />
+               </image>
+            </ImageView>
+            <Label fx:id="emerBrakingLabel" layoutX="613.0" layoutY="508.0" prefHeight="55.0" prefWidth="110.0" text="Emergency Braking" textAlignment="CENTER" textOverrun="CLIP" wrapText="true">
+               <font>
+                  <Font name="DejaVu Sans Bold" size="17.0" />
+               </font>
+            </Label>
          </children>
       </AnchorPane>
    </children>

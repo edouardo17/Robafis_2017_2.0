@@ -1,6 +1,7 @@
 package robafis.interfx.view;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +15,9 @@ import eu.hansolo.medusa.Gauge;
 import eu.hansolo.medusa.Gauge.SkinType;
 import eu.hansolo.medusa.GaugeBuilder;
 import eu.hansolo.medusa.Section;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.FloatProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -34,6 +37,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Stop;
 import robafis.interfx.MainApp;
@@ -57,8 +62,13 @@ public class InterfxOverviewController {
 	@FXML private Button chrono_set360;
 	@FXML private Button setRaceParams;
 	@FXML private Button setPadParams;
+	@FXML private Button obstacleAvoidButton;
+	@FXML private Button radarOnOffButton;
 
 	@FXML private Label warningBox;
+	@FXML private Label obstacleAvoidLabel;
+	@FXML private Label radarOnOffLabel;
+	@FXML private Label emerBrakingLabel;
 
 	@FXML private TextArea infoBox;
 	@FXML private TextField portInput;
@@ -78,11 +88,42 @@ public class InterfxOverviewController {
 	@FXML private ImageView motor2Status;
 	@FXML private ImageView steeringStatus;
 	@FXML private ImageView warningStatus;
+	@FXML private ImageView leftRadar;
+	@FXML private ImageView centerRadar;
+	@FXML private ImageView rightRadar;
+	@FXML private ImageView reverseRadar;
+	@FXML private ImageView obstacleAvoidButtonImage;
+	@FXML private ImageView radarOnOffButtonImage;
+	@FXML private ImageView emerBrakingStatus;
 
 	@FXML private GridPane batteryPane;
 	@FXML private GridPane anglePane;
 	@FXML private GridPane speedPane;
 	@FXML private GridPane chronoPane;
+	
+	private Image l_5 = new Image("file:ressources/radar/l_5.png");
+	private Image l_4 = new Image("file:ressources/radar/l_4.png");
+	private Image l_3 = new Image("file:ressources/radar/l_3.png");
+	private Image l_2 = new Image("file:ressources/radar/l_2.png");
+	private Image l_1 = new Image("file:ressources/radar/l_1.png");
+	private Image l_0 = new Image("file:ressources/radar/l_0.png");
+	
+	private Image r_5 = new Image("file:ressources/radar/r_5.png");
+	private Image r_4 = new Image("file:ressources/radar/r_4.png");
+	private Image r_3 = new Image("file:ressources/radar/r_3.png");
+	private Image r_2 = new Image("file:ressources/radar/r_2.png");
+	private Image r_1 = new Image("file:ressources/radar/r_1.png");
+	private Image r_0 = new Image("file:ressources/radar/r_0.png");
+	
+	private Image c_5 = new Image("file:ressources/radar/c_5.png");
+	private Image c_4 = new Image("file:ressources/radar/c_4.png");
+	private Image c_3 = new Image("file:ressources/radar/c_3.png");
+	private Image c_2 = new Image("file:ressources/radar/c_2.png");
+	private Image c_1 = new Image("file:ressources/radar/c_1.png");
+	private Image c_0 = new Image("file:ressources/radar/c_0.png");
+	
+	private Image on = new Image("file:ressources/icons/on.png");
+	private Image off = new Image("file:ressources/icons/off.png");
 
 	private String buttonPressedStyle = "-fx-background-color: \n" + "        #3c7fb1,\n"
 			+ "        linear-gradient(#61adc6, #56c4ff),\n"
@@ -111,9 +152,10 @@ public class InterfxOverviewController {
 	public static FloatProperty batteryLevel = new SimpleFloatProperty(0);
 	public static FloatProperty angle = new SimpleFloatProperty(0);
 	public static FloatProperty speed = new SimpleFloatProperty(0);
-	public static FloatProperty lSensor = new SimpleFloatProperty(0);
-	public static FloatProperty cSensor = new SimpleFloatProperty(0);
-	public static FloatProperty rSensor = new SimpleFloatProperty(0);
+	public static DoubleProperty lSensor = new SimpleDoubleProperty(0.0);
+	public static DoubleProperty cSensor = new SimpleDoubleProperty(0.0);
+	public static DoubleProperty rSensor = new SimpleDoubleProperty(0.0);
+	public static DoubleProperty bSensor = new SimpleDoubleProperty(0.0);
 	
 
 	private MainApp mainApp;
@@ -128,6 +170,9 @@ public class InterfxOverviewController {
 
 	Boolean started = false;
 	Boolean startedSteering = false;
+	Boolean startedReverse = false;
+	Boolean obstacleAvoidBool = false;
+	Boolean radarBool = false;
 	public static Boolean running = true;
 
 	public InterfxOverviewController() {
@@ -165,7 +210,7 @@ public class InterfxOverviewController {
 	public void radar_Thread() {
 		Runnable task = new Runnable() {
 			public void run() {
-				FxTimer.runPeriodically(Duration.ofMillis(1000), () -> {
+				FxTimer.runPeriodically(Duration.ofMillis(300), () -> {
 					commMotor.fifoQueue.add(97);
 				});
 			}
@@ -216,6 +261,9 @@ public class InterfxOverviewController {
 		setRaceParams.setDisable(true);
 		warningStatus.setVisible(false);
 		warningBox.setVisible(false);
+
+		emerBrakingLabel.setVisible(false);
+		emerBrakingStatus.setVisible(false);
 		
 		chrono_reset.setStyle(chronoButtonStyle);
 		chrono_start.setStyle(chronoButtonStyle);
@@ -228,7 +276,18 @@ public class InterfxOverviewController {
 		motor2Status.setImage(new Image("file:ressources/icons/ko.png"));
 		steeringStatus.setImage(new Image("file:ressources/icons/ko.png"));
 		
+		leftRadar.setImage(l_5);
+		centerRadar.setImage(c_5);
+		rightRadar.setImage(r_5);
+		reverseRadar.setImage(c_5);
 
+		radarOnOffButtonImage.setImage(off);		
+		obstacleAvoidButtonImage.setImage(off);
+		obstacleAvoidButton.setDisable(true);
+		
+		obstacleAvoidLabel.setTextFill(Color.LIGHTGRAY);
+		radarOnOffLabel.setTextFill(Color.LIGHTGRAY);
+		
 		final ChangeListener batteryLevelListener = new ChangeListener() {
 			@Override
 			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
@@ -271,7 +330,11 @@ public class InterfxOverviewController {
 		final ChangeListener leftSensorListener = new ChangeListener() {
 			@Override
 			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
-				System.out.println(newValue);
+				if (radarBool) {
+					if (((double) newValue) == Double.POSITIVE_INFINITY) {
+						radarUpdate("leftRadar", 2.0);
+					} else radarUpdate("leftRadar", ((double) newValue));
+				} else radarUpdate("Off", 2.0);
 			}
 		};
 
@@ -280,7 +343,16 @@ public class InterfxOverviewController {
 		final ChangeListener centerSensorListener = new ChangeListener() {
 			@Override
 			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
-				System.out.println(newValue);
+				if (radarBool) {
+					if (((double) newValue) == Double.POSITIVE_INFINITY) {
+						radarUpdate("centerRadar", 2.0);
+					} else radarUpdate("centerRadar", ((double) newValue));
+					if (obstacleAvoidBool && !startedReverse && ((double) newValue) < 0.4) {
+						commMotor.fifoQueue.add(96);
+						emerBrakingLabel.setVisible(true);
+						emerBrakingStatus.setVisible(true);
+					}
+				} else radarUpdate("Off", 2.0);
 			}
 		};
 
@@ -289,11 +361,28 @@ public class InterfxOverviewController {
 		final ChangeListener rightSensorListener = new ChangeListener() {
 			@Override
 			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
-				System.out.println(newValue);
+				if (radarBool) {
+					if (((double) newValue) == Double.POSITIVE_INFINITY) {
+						radarUpdate("rightRadar", 2.0);
+					} else radarUpdate("rightRadar", ((double) newValue));
+				} else radarUpdate("Off", 2.0);
 			}
 		};
 
 		rSensor.addListener(rightSensorListener);
+		
+		final ChangeListener reverseSensorListener = new ChangeListener() {
+			@Override
+			public void changed(ObservableValue observableValue, Object oldValue, Object newValue) {
+				if (radarBool) {
+					if (((double) newValue) == Double.POSITIVE_INFINITY) {
+					radarUpdate("reverseRadar", 2.0);
+					} else radarUpdate("reverseRadar", ((double) newValue));
+				} else radarUpdate("Off", 2.0);
+			}
+		};
+
+		bSensor.addListener(reverseSensorListener);
 
 		angleGauge = GaugeBuilder.create()
 				.skinType(SkinType.HORIZONTAL)
@@ -364,6 +453,42 @@ public class InterfxOverviewController {
 		params_Thread();
 		radar_Thread();
 		configureSliders();
+	}
+	
+	@FXML
+	private void setRadarOnOff() {
+		if (radarBool) {
+			lSensor.set(2.0);
+			rSensor.set(2.0);
+			cSensor.set(2.0);
+			bSensor.set(2.0);
+			radarBool = false;
+			radarOnOffButtonImage.setImage(off);
+			obstacleAvoidButton.setDisable(true);
+			obstacleAvoidLabel.setTextFill(Color.LIGHTGRAY);
+			radarOnOffLabel.setTextFill(Color.LIGHTGRAY);
+			if (obstacleAvoidBool) setObstacleAvoid();
+		} else {
+			radarBool = true;
+			radarOnOffButtonImage.setImage(on);
+			radarOnOffLabel.setTextFill(Color.BLACK);
+			obstacleAvoidButton.setDisable(false);
+			obstacleAvoidButtonImage.setImage(off);
+			commMotor.fifoQueue.add(97);
+		}
+	}
+	
+	@FXML
+	private void setObstacleAvoid() {
+		if (obstacleAvoidBool) {
+			obstacleAvoidBool=false;
+			obstacleAvoidButtonImage.setImage(off);
+			obstacleAvoidLabel.setTextFill(Color.LIGHTGRAY);
+		}else {
+			obstacleAvoidBool=true;
+			obstacleAvoidButtonImage.setImage(on);
+			obstacleAvoidLabel.setTextFill(Color.BLACK);
+		}
 	}
 
 	@FXML
@@ -599,6 +724,9 @@ public class InterfxOverviewController {
 				if (event.getCode() == KeyCode.NUMPAD5 && !started) {
 					commMotor.fifoQueue.add(5);
 					started = true;
+					startedReverse = true;
+					emerBrakingLabel.setVisible(false);
+					emerBrakingStatus.setVisible(false);
 					boutonRecule.setStyle(buttonPressedStyle);
 					speed.set(200);
 				}
@@ -632,6 +760,7 @@ public class InterfxOverviewController {
 
 				if (event.getCode() == KeyCode.NUMPAD5 && started) {
 					started = false;
+					startedReverse = false;
 					boutonRecule.setStyle("");
 					commMotor.fifoQueue.add(-1);
 					speed.set(0);
@@ -650,6 +779,52 @@ public class InterfxOverviewController {
 				}
 			}
 		});
+	}
+	
+private void radarUpdate(String radar, double dist) {
+		
+		if(radar.contentEquals("leftRadar")) {
+			if(dist>=1.0) leftRadar.setImage(l_0);
+			if(dist<0.8 && dist>=0.6) leftRadar.setImage(l_1);
+			if(dist<0.6 && dist>=0.4) leftRadar.setImage(l_2);
+			if(dist<0.4 && dist>=0.2) leftRadar.setImage(l_3);
+			if(dist<0.2 && dist>=0.1) leftRadar.setImage(l_4);
+			if(dist<0.1) leftRadar.setImage(l_5);
+		}
+		
+		if(radar.contentEquals("centerRadar")) {
+			if(dist>=1.0) centerRadar.setImage(c_0);
+			if(dist<0.8 && dist>=0.6) centerRadar.setImage(c_1);
+			if(dist<0.6 && dist>=0.4) centerRadar.setImage(c_2);
+			if(dist<0.4 && dist>=0.2) centerRadar.setImage(c_3);
+			if(dist<0.2 && dist>=0.1) centerRadar.setImage(c_4);
+			if(dist<0.1) centerRadar.setImage(c_5);
+		}
+		
+		if(radar.contentEquals("rightRadar")) {
+			if(dist>=1.0) rightRadar.setImage(r_0);
+			if(dist<0.8 && dist>=0.6) rightRadar.setImage(r_1);
+			if(dist<0.6 && dist>=0.4) rightRadar.setImage(r_2);
+			if(dist<0.4 && dist>=0.2) rightRadar.setImage(r_3);
+			if(dist<0.2 && dist>=0.1) rightRadar.setImage(r_4);
+			if(dist<0.1) rightRadar.setImage(r_5);
+		}
+		
+		if(radar.contentEquals("reverseRadar")) {
+			if(dist>=1.0) reverseRadar.setImage(c_0);
+			if(dist<0.8 && dist>=0.6) reverseRadar.setImage(c_1);
+			if(dist<0.6 && dist>=0.4) reverseRadar.setImage(c_2);
+			if(dist<0.4 && dist>=0.2) reverseRadar.setImage(c_3);
+			if(dist<0.2 && dist>=0.1) reverseRadar.setImage(c_4);
+			if(dist<0.1) reverseRadar.setImage(c_5);
+		}
+		
+		if (radar.contentEquals("off")) {
+			leftRadar.setImage(l_0);
+			centerRadar.setImage(c_0);
+			rightRadar.setImage(r_0);
+			reverseRadar.setImage(c_0);
+		}
 	}
 
 	public void setMainApp(MainApp mainApp) {

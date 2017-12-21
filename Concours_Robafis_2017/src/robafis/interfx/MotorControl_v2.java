@@ -20,7 +20,7 @@ public class MotorControl_v2 {
 	
 	static Port leftSensorPort = commMotor.ev3.getPort("S1");            
 	public static EV3UltrasonicSensor lSensor = new EV3UltrasonicSensor(leftSensorPort);
-	public static SampleProvider leftDistance = lSensor.getMode("Distance");
+	public static SampleProvider leftDistance = lSensor.getDistanceMode();
 	public static float[] leftDistanceSample = new float[leftDistance.sampleSize()];
 	
 	static Port centerSensorPort = commMotor.ev3.getPort("S2");            
@@ -32,6 +32,11 @@ public class MotorControl_v2 {
 	public static EV3UltrasonicSensor rSensor = new EV3UltrasonicSensor(rightSensorPort);
 	public static SampleProvider rightDistance = rSensor.getMode("Distance");
 	public static float[] rightDistanceSample = new float[leftDistance.sampleSize()];
+	
+	static Port reverseSensorPort = commMotor.ev3.getPort("S3");            
+	public static EV3UltrasonicSensor bSensor = new EV3UltrasonicSensor(reverseSensorPort);
+	public static SampleProvider reverseDistance = bSensor.getMode("Distance");
+	public static float[] reverseDistanceSample = new float[leftDistance.sampleSize()];
 	
 	public static void resetParameters() throws RemoteException {
 		steeringMotor.setSpeed(InterfxOverviewController.steeringMotorSpeed);
@@ -88,6 +93,13 @@ public class MotorControl_v2 {
 		rightMotor.stop(true);
 		leftMotor.stop(true);
 	}
+	
+	public static void MotorBrutalStop() throws RemoteException {
+		rightMotor.setAcceleration(5000);
+		leftMotor.setAcceleration(5000);
+		rightMotor.stop(true);
+		leftMotor.stop(true);
+	}
 
 	public static void ClosePorts() throws RemoteException {
 		rightMotor.stop(true);
@@ -99,6 +111,7 @@ public class MotorControl_v2 {
 		lSensor.close();
 		cSensor.close();
 		rSensor.close();
+		bSensor.close();
 	}
 
 	public static void CalibrateLeft() throws RemoteException {
