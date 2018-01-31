@@ -1,11 +1,6 @@
 package robafis.interfx.view;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.time.Duration;
 
@@ -37,8 +32,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Stop;
 import robafis.interfx.MainApp;
@@ -173,7 +166,9 @@ public class InterfxOverviewController {
 	Boolean startedReverse = false;
 	Boolean obstacleAvoidBool = false;
 	Boolean radarBool = false;
+	public static Boolean startedBrutal = false;
 	public static Boolean running = true;
+	public static Boolean startedAvoid = false;
 
 	public InterfxOverviewController() {
 	}
@@ -241,6 +236,20 @@ public class InterfxOverviewController {
 			public void run() {
 				FxTimer.runPeriodically(Duration.ofMillis(200), () -> {
 					commMotor.fifoQueue.add(98);
+				});
+			}
+		};
+		Thread backgroundThread = new Thread(task);
+		backgroundThread.setDaemon(true);
+		backgroundThread.start();
+	}
+	
+	// THREAD OBSTACLE AVOIDANCE
+	public void obstacleAvoidance_Thread() {
+		Runnable task = new Runnable() {
+			public void run() {
+				FxTimer.runPeriodically(Duration.ofMillis(50), () -> {
+					obstacleAvoidance();
 				});
 			}
 		};
@@ -347,11 +356,6 @@ public class InterfxOverviewController {
 					if (((double) newValue) == Double.POSITIVE_INFINITY) {
 						radarUpdate("centerRadar", 2.0);
 					} else radarUpdate("centerRadar", ((double) newValue));
-					if (obstacleAvoidBool && !startedReverse && ((double) newValue) < 0.4) {
-						commMotor.fifoQueue.add(96);
-						emerBrakingLabel.setVisible(true);
-						emerBrakingStatus.setVisible(true);
-					}
 				} else radarUpdate("Off", 2.0);
 			}
 		};
@@ -452,7 +456,44 @@ public class InterfxOverviewController {
 		battery_Thread();
 		params_Thread();
 		radar_Thread();
+		obstacleAvoidance_Thread();
 		configureSliders();
+	}
+	
+	private void obstacleAvoidance() {
+		if (obstacleAvoidBool && !startedBrutal) {
+			
+			// STOP IF OBSTACLE DETECTED IN FRONT
+			if (!startedReverse && cSensor.doubleValue() < 0.15) {
+				// BRUTAL STOP
+				startedBrutal = true;
+				commMotor.fifoQueue.add(96);
+				emerBrakingLabel.setVisible(true);
+				emerBrakingStatus.setVisible(true);
+			}
+			
+			// STOP IF OBSTACLE DETECTED BEHIND
+			if (!started && bSensor.doubleValue() < 0.15) {
+				// BRUTAL STOP
+				startedBrutal = true;
+				commMotor.fifoQueue.add(96);
+				emerBrakingLabel.setVisible(true);
+				emerBrakingStatus.setVisible(true);
+			}
+			
+			
+			if (!startedAvoid && !startedReverse && lSensor.doubleValue() < 0.3) {
+				startedAvoid = true;
+				//TURN RIGHT
+				commMotor.fifoQueue.add(95);
+			}
+			
+			if (!startedAvoid && !startedReverse && rSensor.doubleValue() < 0.3) {
+				startedAvoid = true;
+				//TURN LEFT
+				commMotor.fifoQueue.add(94);
+			}
+		}
 	}
 	
 	@FXML
@@ -682,26 +723,6 @@ public class InterfxOverviewController {
 			@Override
 			public void handle(KeyEvent event) {
 
-				if (event.getCode() == KeyCode.ENTER) {
-					try {
-						InputStream ips = new FileInputStream("AutoRun.txt");
-						InputStreamReader ipsr = new InputStreamReader(ips);
-						BufferedReader br = new BufferedReader(ipsr);
-						String ligne;
-						while ((ligne = br.readLine()) != null) {
-							if (!ligne.contains("#")) {
-								commMotor.fifoQueue.add(Integer.parseInt(ligne));
-								System.out.println("J'ajoute " + ligne);
-								Thread.sleep(10);
-							}
-						}
-						br.close();
-					} catch (IOException | InterruptedException e) {
-						e.printStackTrace();
-					}
-
-				}
-
 				if (event.getCode() == KeyCode.NUMPAD4 && !startedSteering) {
 					commMotor.fifoQueue.add(4);
 					startedSteering = true;
@@ -717,6 +738,9 @@ public class InterfxOverviewController {
 				if (event.getCode() == KeyCode.NUMPAD8 && !started) {
 					commMotor.fifoQueue.add(8);
 					started = true;
+					startedBrutal = false;
+					emerBrakingLabel.setVisible(false);
+					emerBrakingStatus.setVisible(false);
 					boutonAvance.setStyle(buttonPressedStyle);
 					speed.set(200);
 				}
@@ -725,6 +749,7 @@ public class InterfxOverviewController {
 					commMotor.fifoQueue.add(5);
 					started = true;
 					startedReverse = true;
+					startedBrutal = false;
 					emerBrakingLabel.setVisible(false);
 					emerBrakingStatus.setVisible(false);
 					boutonRecule.setStyle(buttonPressedStyle);

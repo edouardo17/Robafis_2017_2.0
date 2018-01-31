@@ -1,15 +1,12 @@
 package robafis.interfx;
 
-import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import lejos.hardware.Audio;
 import lejos.hardware.Battery;
 import lejos.hardware.BrickFinder;
-import lejos.internal.ev3.EV3Audio;
 import lejos.remote.ev3.RemoteEV3;
 import robafis.interfx.view.InterfxOverviewController;
 
@@ -36,8 +33,20 @@ public class commMotor {
 				if (instr == 5) {MotorControl_v2.MotorStartBackward();}
 				if (instr == -1) {MotorControl_v2.MotorStop();}
 				if (instr == 0) {MotorControl_v2.steeringMotor.rotateTo(0, true);}
-				if (instr == 9) {MotorControl_v2.autoRun();}
-				if (instr == 96) MotorControl_v2.MotorBrutalStop();
+				if (instr == 94) {
+					MotorControl_v2.steeringMotor.rotate(20, false);
+					MotorControl_v2.steeringMotor.rotate(-20, true);
+					InterfxOverviewController.startedAvoid = false;
+					}
+				if (instr == 95) {
+					MotorControl_v2.steeringMotor.rotate(-20, false);
+					MotorControl_v2.steeringMotor.rotate(20, true);
+					InterfxOverviewController.startedAvoid = false;
+					}
+				if (instr == 96) {
+					MotorControl_v2.MotorBrutalStop();
+//					InterfxOverviewController.startedAvoid = false;
+				}
 				if (instr == 97) getRadar();
 				if (instr == 98) getParams();
 				if (instr == 99) getBatteryLevel();
@@ -56,8 +65,6 @@ public class commMotor {
 
 	public static void connectToEV3() {
 		ev3 = (RemoteEV3) BrickFinder.getDefault();
-		Audio ev3Audio = ev3.getAudio();
-		ev3Audio.playSample(new File("beep.wav"), 100);
 	}
 	
 	public static void getRadar() {
@@ -83,6 +90,4 @@ public class commMotor {
 		angle = MotorControl_v2.steeringMotor.getTachoCount();
 		InterfxOverviewController.angle.set(-angle);
 	}
-	
-	
 }
